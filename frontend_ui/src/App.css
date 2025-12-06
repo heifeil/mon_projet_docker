@@ -22,20 +22,20 @@ body {
 
 /* 1. THÈME PAR DÉFAUT : SPIE BATIGNOLLES (Rouge & Gris Pro) */
 :root, [data-theme='Spie Batignolles'] {
-  --primary-color: #d32f2f;       /* Rouge brique professionnel */
+  --primary-color: #646464;       /* Jaune orange Spie Batignolles */
   --bg-color: #f4f6f8;            /* Gris très clair (fond page) */
-  --header-bg: #ffffff;           /* Blanc */
-  --header-text: #333333;
-  --sidebar-bg: #2c3e50;          /* Bleu nuit foncé */
-  --sidebar-text: #ffffff;
-  --sidebar-active-bg: rgba(255, 255, 255, 0.1);
-  --text-main: #333333;           /* Texte principal */
+  --header-bg: #b4b4b4;           /* Blanc */
+  --header-text: #000000;
+  --sidebar-bg: #b4b4b4;          /* Bleu nuit foncé */
+  --sidebar-text: #000000;
+  --sidebar-active-bg: #F0AF00;
+  --text-main: #646464;           /* Texte principal */
   --border-color: #ddd;
 }
 
 /* 2. THÈME : CLAIR (Light Mode - Bleu & Blanc) */
 [data-theme='Clair'] {
-  --primary-color: #3498db;       /* Bleu standard */
+  --primary-color: #4B96CD;       /* Bleu standard */
   --bg-color: #ffffff;            /* Blanc pur */
   --header-bg: #f0f0f0;           /* Gris très pâle */
   --header-text: #2c3e50;
@@ -48,7 +48,7 @@ body {
 
 /* 3. THÈME : SOMBRE (Dark Mode - Gris Foncé & Accents) */
 [data-theme='Sombre'] {
-  --primary-color: #bb86fc;       /* Violet/Mauve accessible sur fond noir */
+  --primary-color: #F0AF00;       /* Violet/Mauve accessible sur fond noir */
   --bg-color: #121212;            /* Noir "Google Material" */
   --header-bg: #1e1e1e;           /* Gris foncé */
   --header-text: #e0e0e0;

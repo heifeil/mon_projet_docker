@@ -82,3 +82,49 @@ exports.login = async (req, res) => {
         res.status(500).json({ message: "Erreur serveur lors de la connexion" });
     }
 };
+
+// --- MISE À JOUR DU THÈME ---
+exports.updateTheme = async (req, res) => {
+    const { id, theme } = req.body; // On reçoit l'ID user et le nouveau thème
+
+    try {
+        await db.query('UPDATE utilisateurs SET theme = ? WHERE id = ?', [theme, id]);
+        //res.json({ success: true, message: "Thème mis à jour" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erreur lors de la mise à jour du thème" });
+    }
+};
+
+
+// --- CHANGER LE MOT DE PASSE ---
+exports.updatePassword = async (req, res) => {
+    const { id, current_password, new_password } = req.body;
+
+    try {
+        // 1. Récupérer l'utilisateur pour avoir son mot de passe actuel crypté
+        const [users] = await db.query('SELECT * FROM utilisateurs WHERE id = ?', [id]);
+        
+        if (users.length === 0) return res.status(404).json({ message: "Utilisateur introuvable" });
+        const user = users[0];
+
+        // 2. Vérifier que l'ancien mot de passe est bon
+        const isMatch = await bcrypt.compare(current_password, user.mot_de_passe);
+        if (!isMatch) {
+            return res.status(401).json({ message: "Le mot de passe actuel est incorrect" });
+        }
+
+        // 3. Crypter le NOUVEAU mot de passe
+        const salt = await bcrypt.genSalt(10);
+        const hash = await bcrypt.hash(new_password, salt);
+
+        // 4. Mise à jour
+        await db.query('UPDATE utilisateurs SET mot_de_passe = ? WHERE id = ?', [hash, id]);
+
+        res.json({ success: true, message: "Mot de passe modifié avec succès" });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Erreur serveur" });
+    }
+};
