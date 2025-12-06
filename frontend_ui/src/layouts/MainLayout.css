@@ -1,0 +1,108 @@
+/* frontend_ui/src/layouts/MainLayout.css */
+
+.app-layout {
+  display: grid;
+  height: 100vh;
+  width: 100vw;
+  /* Utilisation des variables définies dans App.css */
+  grid-template-rows: var(--header-height) 1fr;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  grid-template-areas:
+    "header header"
+    "sidebar main";
+}
+
+/* HEADER */
+.header { 
+  grid-area: header; 
+  background: var(--header-bg);   /* Variable ! */
+  color: var(--header-text);      /* Variable ! */
+  border-bottom: 1px solid var(--border-color); 
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between; 
+  padding: 0 20px; 
+}
+
+/* SIDEBAR */
+.sidebar { 
+  grid-area: sidebar; 
+  background: var(--sidebar-bg);  /* Variable ! */
+  color: var(--sidebar-text);     /* Variable ! */
+  display: flex; 
+  flex-direction: column; 
+  border-right: 1px solid var(--border-color); /* Petit ajout esthétique */
+}
+
+/* MAIN CONTENT */
+.main-content { 
+  grid-area: main; 
+  padding: 20px; 
+  overflow-y: auto; 
+  background-color: var(--bg-color); /* Le fond change avec le thème */
+}
+
+/* LIENS NAVIGATION */
+.nav-link {
+  padding: 15px 20px;
+  color: var(--sidebar-text);      /* Variable ! */
+  opacity: 0.7;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: 0.3s;
+}
+
+.nav-link:hover, .nav-link.active {
+  background-color: var(--sidebar-active-bg); /* Variable ! */
+  opacity: 1;
+  color: var(--primary-color);     /* La couleur active dépend du thème */
+  /* On garde la bordure mais on utilise la couleur primaire */
+  border-left: 4px solid var(--primary-color); 
+}
+
+/* BOUTON CONNEXION */
+.login-btn {
+  background-color: var(--primary-color); /* Bouton rouge/bleu/violet selon thème */
+  color: white; /* Toujours blanc sur le bouton primary */
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* --- RESPONSIVE (inchangé, sauf variables) --- */
+@media (max-width: 768px) {
+  .app-layout {
+    grid-template-rows: var(--header-height) 1fr 70px;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "header"
+      "main"
+      "sidebar";
+  }
+
+  .sidebar {
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0;
+    border-right: none;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .nav-link {
+    flex-direction: column;
+    font-size: 10px;
+    padding: 5px;
+    border-left: none;
+    border-top: 4px solid transparent; 
+  }
+  
+  .nav-link:hover, .nav-link.active {
+    border-left: none;
+    border-top: 4px solid var(--primary-color);
+  }
+}
