@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # Conteneur 1 : Base de données
+  mariadb_service:
+    image: mariadb:latest
+    container_name: conteneur_bdd
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password_securise # À changer pour la prod
+      MYSQL_DATABASE: app_db
+      MYSQL_USER: app_user
+      MYSQL_PASSWORD: app_user_password
+    ports:
+      - "3307:3306" # On map le 3306 du conteneur sur le 3307 de ton PC pour éviter les conflits si tu as déjà MariaDB installé
+    volumes:
+      - ./db_data:/var/lib/mysql # Persistance des données (ne pas perdre la BDD si on coupe docker)
+    networks:
+      - reseau_app
+
+  # Conteneur 2 : Backend API
+  backend_service:
+    build: ./backend_api
+    container_name: conteneur_backend
+    ports:
+      - "5000:5000"
+    environment:
+      DB_HOST: mariadb_service # Nom du service docker ci-dessus
+      DB_USER: app_user
+      DB_PASSWORD: app_user_password
+      DB_NAME: app_db
+    depends_on:
+      - mariadb_service
+    networks:
+      - reseau_app
+
+  # Conteneur 3 : Frontend UI
+  frontend_service:
+    build: ./frontend_ui
+    container_name: conteneur_frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend_service
+    networks:
+      - reseau_app
+
+networks:
+  reseau_app:
+    driver: bridge
