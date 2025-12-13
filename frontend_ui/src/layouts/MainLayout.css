@@ -10,42 +10,53 @@
   grid-template-areas:
     "header header"
     "sidebar main";
+  overflow: hidden; /* Bloque le scroll global */
 }
 
 /* HEADER */
 .header { 
   grid-area: header; 
-  background: var(--header-bg);   /* Variable ! */
-  color: var(--header-text);      /* Variable ! */
+  background: var(--header-bg);
+  color: var(--header-text);
   border-bottom: 1px solid var(--border-color); 
   display: flex; 
   align-items: center; 
   justify-content: space-between; 
   padding: 0 20px; 
+  z-index: 20;
 }
 
 /* SIDEBAR */
 .sidebar { 
   grid-area: sidebar; 
-  background: var(--sidebar-bg);  /* Variable ! */
-  color: var(--sidebar-text);     /* Variable ! */
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
   display: flex; 
   flex-direction: column; 
-  border-right: 1px solid var(--border-color); /* Petit ajout esthétique */
+  border-right: 1px solid var(--border-color);
+  z-index: 10;
 }
 
 /* MAIN CONTENT */
 .main-content { 
   grid-area: main; 
-  padding: 20px; 
-  overflow-y: auto; 
-  background-color: var(--bg-color); /* Le fond change avec le thème */
+  background-color: var(--bg-color);
+  
+  /* CRUCIAL : On met le padding à 0 ici. C'est le dashboard qui gérera ses bords. */
+  padding: 0 !important; 
+  margin: 0 !important;
+  
+  overflow: hidden; /* On délègue le scroll (ou non) à la page enfant */
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  height: 100%;
 }
 
 /* LIENS NAVIGATION */
 .nav-link {
   padding: 15px 20px;
-  color: var(--sidebar-text);      /* Variable ! */
+  color: var(--sidebar-text);
   opacity: 0.7;
   text-decoration: none;
   display: flex;
@@ -55,17 +66,16 @@
 }
 
 .nav-link:hover, .nav-link.active {
-  background-color: var(--sidebar-active-bg); /* Variable ! */
+  background-color: var(--sidebar-active-bg);
   opacity: 1;
-  color: var(--primary-color);     /* La couleur active dépend du thème */
-  /* On garde la bordure mais on utilise la couleur primaire */
+  color: var(--primary-color);
   border-left: 4px solid var(--primary-color); 
 }
 
 /* BOUTON CONNEXION */
 .login-btn {
-  background-color: var(--primary-color); /* Bouton rouge/bleu/violet selon thème */
-  color: white; /* Toujours blanc sur le bouton primary */
+  background-color: var(--primary-color);
+  color: white;
   border: none;
   padding: 8px 16px;
   border-radius: 4px;
@@ -73,8 +83,8 @@
   font-weight: bold;
 }
 
-/* --- RESPONSIVE (inchangé, sauf variables) --- */
-@media (max-width: 768px) {
+/* --- RESPONSIVE --- */
+@media (max-width: 1000px) {
   .app-layout {
     grid-template-rows: var(--header-height) 1fr 70px;
     grid-template-columns: 1fr;

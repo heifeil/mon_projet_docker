@@ -6,6 +6,8 @@ const cron = require('node-cron');
 // Import des routes et contrôleurs
 const authRoutes = require('./routes/auth_routes');
 const pipRoutes = require('./routes/pip_routes');
+const dashboardRoutes = require('./routes/dashboard_routes');
+
 const pipController = require('./controllers/pip_controller');
 
 const app = express();
@@ -13,6 +15,7 @@ const port = process.env.PORT || 5000;
 
 app.use(express.json());
 app.use(cors());
+app.use('/api/dashboard', dashboardRoutes);
 
 // --- DÉFINITION DES ROUTES ---
 app.use('/api/auth', authRoutes);

@@ -2,6 +2,7 @@ const db = require('../config/db');
 const fs = require('fs');
 const csv = require('csv-parser');
 const ping = require('ping');
+const si = require('systeminformation'); // IMPORT NÉCESSAIRE
 
 const CSV_PATH = '/app/csv_files/pip.csv'; // Chemin dans le conteneur
 
@@ -85,28 +86,92 @@ exports.getPipData = async (req, res) => {
     }
 };
 
-// --- 3. TÂCHE AUTOMATIQUE : PING ---
+// --- 3. TÂCHE AUTOMATIQUE : PING & INDICATEURS ---
 exports.runPingTask = async () => {
-    console.log("--- Démarrage de la tâche PING ---");
+    console.log("--- Démarrage de la tâche PING & INDICATEURS ---");
     
     try {
         const [tables] = await db.query("SHOW TABLES LIKE 'pip_data'");
         if (tables.length === 0) return console.log("Table pip_data inexistante, pas de ping.");
 
         const [rows] = await db.query('SELECT id, IP FROM pip_data');
+        if (rows.length === 0) return;
 
+        // VARIABLES POUR LES STATISTIQUES
+        let totalEquipements = 0;
+        let nbReponseOK = 0;
+        let sommeLatence = 0;
+        let sommePertePaquets = 0;
+
+        // 1. BOUCLE DE PING
         for (const row of rows) {
             if (!row.IP) continue;
+            totalEquipements++;
 
+            // On ping (timeout 2s)
+            // ping.promise.probe retourne un objet avec : alive (bool), time (ms), packetLoss (%)
             const res = await ping.promise.probe(row.IP, { timeout: 2 });
+            
             const etat = res.alive ? 'OK' : 'NOK';
-
+            
+            // Mise à jour BDD PIP_DATA
             await db.query('UPDATE pip_data SET ETAT_COM = ? WHERE id = ?', [etat, row.id]);
+
+            // Accumulation des stats
+            if (res.alive) {
+                nbReponseOK++;
+                // res.time peut être 'unknown', on s'assure que c'est un nombre
+                const latence = parseFloat(res.time) || 0;
+                sommeLatence += latence;
+            }
+
+            // res.packetLoss est une string "0.000", on convertit
+            const perte = parseFloat(res.packetLoss) || 0;
+            sommePertePaquets += perte;
         }
+
+        // 2. CALCULS DES RÉSULTATS
+        const tauxCom = totalEquipements > 0 ? (nbReponseOK / totalEquipements) * 100 : 0;
+        const delaiMoyen = nbReponseOK > 0 ? Math.round(sommeLatence / nbReponseOK) : 0;
+        const moyennePerte = totalEquipements > 0 ? (sommePertePaquets / totalEquipements) : 0;
+
+        // 3. RÉCUPÉRATION DES INFOS SYSTÈME (CPU / RÉSEAU)
+        // Note: Dans Docker, cela remonte les stats du conteneur, ce qui est une bonne approximation
+        const cpuLoad = await si.currentLoad();
+        const networkStats = await si.networkStats();
+
+        const utilisationCpu = cpuLoad.currentLoad || 0; // Pourcentage CPU actuel
+        
+        // Pour la bande passante, on va faire une estimation basée sur le trafic TX (transmission) en octets/sec
+        // Si networkStats est un tableau (plusieurs interfaces), on prend la première (eth0)
+        const netStat = Array.isArray(networkStats) && networkStats.length > 0 ? networkStats[0] : {};
+        
+        // Estimation arbitraire pour l'exercice : 100% = 10Mo/s (soit 10*1024*1024 octets)
+        const debitMaxEstime = 10 * 1024 * 1024; 
+        const debitActuel = netStat.tx_sec || 0;
+        let utilisationBP = (debitActuel / debitMaxEstime) * 100;
+        if(utilisationBP > 100) utilisationBP = 100; // Cap à 100
+
+        // 4. ENREGISTREMENT DANS LA TABLE INDICATEURS
+        const insertQuery = `
+            INSERT INTO indicateurs 
+            (taux_de_com, delai_rep, perte_paquets, utilisation_bande_passante, utilisation_cpu) 
+            VALUES (?, ?, ?, ?, ?)
+        `;
+        
+        await db.query(insertQuery, [
+            tauxCom.toFixed(2),      // Float (2 décimales)
+            delaiMoyen,              // Int
+            moyennePerte.toFixed(2), // Float
+            utilisationBP.toFixed(2),// Float
+            utilisationCpu.toFixed(2)// Float
+        ]);
+
+        console.log(`[STATS] Com: ${tauxCom.toFixed(1)}% | Latence: ${delaiMoyen}ms | CPU: ${utilisationCpu.toFixed(1)}%`);
         console.log("--- Tâche PING terminée ---");
 
     } catch (error) {
-        console.error("Erreur Cron Ping:", error);
+        console.error("Erreur Cron Ping/Stats:", error);
     }
 };
 
@@ -119,7 +184,7 @@ exports.forcePing = async (req, res) => {
     await exports.runPingTask();
 };
 
-// --- 5. PING SUR UN SEUL ÉQUIPEMENT (NOUVEAU) ---
+// --- 5. PING SUR UN SEUL ÉQUIPEMENT ---
 exports.pingSingleDevice = async (req, res) => {
     const { id, ip } = req.body;
 

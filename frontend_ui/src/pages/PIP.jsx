@@ -12,6 +12,9 @@ const PIP = () => {
   const [filters, setFilters] = useState({});
   const [loading, setLoading] = useState(true);
   
+  // État pour le scan global (bouton Scanner)
+  const [isScanning, setIsScanning] = useState(false);
+
   // État pour gérer les pings unitaires en cours (liste des ID qui chargent)
   const [pingingIds, setPingingIds] = useState([]); 
 
@@ -38,7 +41,6 @@ const PIP = () => {
 
   // --- CHARGEMENT DES DONNÉES ---
   const fetchData = async (isFirstLoad = false) => {
-    // On ne met le loading global que si c'est le tout premier chargement
     if (isFirstLoad) setLoading(true);
 
     try {
@@ -49,14 +51,12 @@ const PIP = () => {
       setAvailableColumns(allCols);
       setData(result.rows || []);
 
-      // Au premier chargement, on configure les colonnes par défaut
       if (isFirstLoad && allCols.length > 0) {
         const defaults = allCols.filter(col => DEFAULT_TARGETS.includes(col));
         
         if (defaults.length > 0) {
             setVisibleCols(defaults);
         } else {
-             // Si le CSV n'a pas les colonnes standards, on affiche tout SAUF les interdites
              setVisibleCols(allCols.filter(c => !FORBIDDEN_COLS.includes(c)));
         }
       }
@@ -73,23 +73,40 @@ const PIP = () => {
     if(!window.confirm("Attention : La table actuelle sera écrasée par le contenu du fichier CSV. Continuer ?")) return;
     try {
       await fetch('http://localhost:5000/api/pip/import', { method: 'POST' });
-      fetchData(true); // On recharge et on reset les colonnes
+      fetchData(true); 
     } catch (err) { alert("Erreur lors de l'import"); }
   };
 
+  // MODIFICATION ICI : Gestion du scan global sans popup
   const handleForcePing = async () => {
+    // 1. Activer l'état de chargement du bouton
+    setIsScanning(true);
+
     try {
+      // 2. Lancer la requête
       await fetch('http://localhost:5000/api/pip/scan', { method: 'POST' });
-      alert("Scan global lancé ! Les statuts se mettront à jour automatiquement.");
-      setTimeout(() => fetchData(false), 2000);
-    } catch (err) { alert("Erreur lancement scan"); }
+      
+      // Note : On a retiré le alert("Scan global lancé...") ici.
+      
+      // 3. Attendre un peu (2s) pour laisser le temps au backend de traiter quelques pings
+      // puis rafraîchir les données.
+      setTimeout(async () => {
+         await fetchData(false);
+         // 4. Désactiver l'état de chargement
+         setIsScanning(false);
+      }, 2000);
+
+    } catch (err) { 
+      console.error(err);
+      alert("Erreur lancement scan"); // On garde l'alerte uniquement en cas d'erreur
+      setIsScanning(false);
+    }
   };
 
   // PING UNITAIRE
   const handleSinglePing = async (row) => {
     if (!row.IP) return alert("Pas d'IP définie pour cet équipement.");
 
-    // 1. Ajouter l'ID à la liste des "chargements en cours"
     setPingingIds(prev => [...prev, row.id]);
 
     try {
@@ -101,7 +118,6 @@ const PIP = () => {
         const res = await response.json();
 
         if (res.success) {
-            // 2. Mettre à jour localement la donnée pour voir le résultat tout de suite
             setData(prevData => prevData.map(item => 
                 item.id === row.id ? { ...item, ETAT_COM: res.newStatus } : item
             ));
@@ -112,7 +128,6 @@ const PIP = () => {
         console.error(err);
         alert("Erreur lors du ping unitaire");
     } finally {
-        // 3. Retirer l'ID de la liste des chargements
         setPingingIds(prev => prev.filter(id => id !== row.id));
     }
   };
@@ -131,18 +146,15 @@ const PIP = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // --- FILTRAGE ---
   const handleFilterChange = (colName, value) => {
     setFilters(prev => ({ ...prev, [colName]: value.toLowerCase() }));
   };
 
-  // Construction de la liste finale des colonnes à afficher
   const finalDisplayColumns = [...visibleCols];
   if (!finalDisplayColumns.includes(MANDATORY_COLUMN) && availableColumns.includes(MANDATORY_COLUMN)) {
     finalDisplayColumns.push(MANDATORY_COLUMN);
   }
 
-  // Filtrage des lignes
   const filteredData = data.filter(row => {
     return finalDisplayColumns.every(col => {
       const filterValue = filters[col] || "";
@@ -169,13 +181,26 @@ const PIP = () => {
             <RefreshCw size={18} />
           </button>
           
-          <button onClick={handleForcePing} className="btn-tool primary-tool">
-            <Activity size={18} /> Scanner le réseau
+          {/* MODIFICATION DU BOUTON SCANNER */}
+          <button 
+            onClick={handleForcePing} 
+            className="btn-tool primary-tool"
+            disabled={isScanning} // Désactivé pendant le scan
+            style={{ minWidth: '100px', justifyContent: 'center' }} // Pour éviter que le bouton change de taille
+          >
+            {isScanning ? (
+                <>
+                  <Loader size={18} className="spin" /> Scan...
+                </>
+            ) : (
+                <>
+                  <Activity size={18} /> Scanner
+                </>
+            )}
           </button>
         </div>
 
         <div className="toolbar-group">
-          {/* MENU SÉLECTION COLONNES */}
           <div className="col-selector-wrapper">
             <button 
               className={`btn-tool ${showColMenu ? 'active' : ''}`} 
@@ -189,9 +214,7 @@ const PIP = () => {
               <div className="col-dropdown">
                 <h4>Afficher / Masquer</h4>
                 {availableColumns.map(col => {
-                    // FILTRE : On ne propose PAS les colonnes interdites
                     if (col === MANDATORY_COLUMN || FORBIDDEN_COLS.includes(col)) return null; 
-                    
                     const isChecked = visibleCols.includes(col);
                     return (
                         <div key={col} className="col-option" onClick={() => toggleColumn(col)}>
@@ -204,7 +227,6 @@ const PIP = () => {
             )}
           </div>
 
-          {/* BOUTON IMPORT (ADMIN SEULEMENT) */}
           {user?.role === 'admin' && (
             <button onClick={handleImport} className="btn-tool danger-tool">
               <Upload size={18} /> CSV
@@ -221,11 +243,11 @@ const PIP = () => {
           <table className="full-width-table">
             <thead>
               <tr>
-                {/* Colonne Actions pour le Ping Unitaire */}
-                <th style={{width: '20px', textAlign: 'center'}}></th>
+                {/* Colonne Ping Fixe */}
+                <th style={{width: '50px', textAlign: 'center'}}></th>
 
                 {finalDisplayColumns.map(col => (
-                  <th key={col}>
+                  <th key={col} data-col={col}>
                     <div className="th-label">{col.replace(/_/g, ' ')}</div>
                     <div className="search-box compact">
                       <Search size={12} className="search-icon"/>
@@ -244,7 +266,6 @@ const PIP = () => {
                 const isPinging = pingingIds.includes(row.id);
                 return (
                   <tr key={index}>
-                    {/* Bouton Ping */}
                     <td style={{textAlign: 'center'}}>
                         <button 
                             className="btn-mini-ping" 
@@ -256,9 +277,8 @@ const PIP = () => {
                         </button>
                     </td>
 
-                    {/* Données */}
                     {finalDisplayColumns.map(col => (
-                      <td key={col}>{renderCell(col, row[col])}</td>
+                      <td key={col} data-col={col}>{renderCell(col, row[col])}</td>
                     ))}
                   </tr>
                 );

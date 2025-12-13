@@ -1,6 +1,7 @@
 .profil-container {
   max-width: 600px;
   margin: 0 auto; /* Centré */
+  padding-top: 50px;
   padding-bottom: 50px;
   animation: fadeIn 0.3s ease;
 }
