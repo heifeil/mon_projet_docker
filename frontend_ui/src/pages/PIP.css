@@ -1,0 +1,174 @@
+/* --- 1. CONTENEUR PRINCIPAL (BLOQUÉ & PLEINE LARGEUR) --- */
+.pip-container {
+  display: flex;
+  flex-direction: column;
+  /* Force la hauteur pour tenir exactement dans l'espace disponible */
+  height: 100%;
+  max-height: calc(100vh - var(--header-height));
+
+  /* On interdit le scroll sur la page globale */
+  overflow: hidden;
+
+  background-color: var(--bg-color);
+
+  /* MODIFICATION ICI : On enlève le padding pour que ça prenne toute la largeur */
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* --- 2. BARRE D'OUTILS (FIXE) --- */
+.toolbar {
+  /* Empêche la toolbar de rétrécir quand le tableau prend de la place */
+  flex-shrink: 0;
+
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 20px;
+  background-color: var(--header-bg);
+  border-bottom: 1px solid var(--border-color);
+  /* On enlève les bordures arrondies sur les côtés si c'est en pleine largeur */
+  /* border: 1px solid var(--border-color); */
+  /* border-radius: 8px 8px 0 0; */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  z-index: 20; /* Pour être sûr que l'ombre passe sur le tableau */
+}
+
+.toolbar-group { display: flex; gap: 10px; align-items: center; }
+
+.btn-tool {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; border: 1px solid var(--border-color);
+  background: var(--bg-color); color: var(--text-main);
+  border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 500;
+  transition: all 0.2s;
+}
+.btn-tool:hover, .btn-tool.active { background-color: rgba(0,0,0,0.05); border-color: var(--text-main); }
+
+.primary-tool { background-color: rgba(var(--primary-color), 0.1); color: var(--primary-color); border-color: transparent; }
+.primary-tool:hover { background-color: rgba(var(--primary-color), 0.2); }
+
+.danger-tool { border-color: rgba(231, 76, 60, 0.3); color: #e74c3c; }
+.danger-tool:hover { background-color: #e74c3c; color: white; }
+
+/* --- MENU SÉLECTION COLONNES (DROPDOWN) --- */
+.col-selector-wrapper { position: relative; }
+.col-dropdown {
+  position: absolute; top: 110%; right: 0;
+  background: var(--header-bg); border: 1px solid var(--border-color);
+  border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  width: 250px; padding: 10px; z-index: 100;
+  max-height: 400px; overflow-y: auto;
+}
+.col-dropdown h4 { margin: 0 0 10px 0; font-size: 0.8rem; opacity: 0.6; text-transform: uppercase; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; }
+
+.col-option {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px; cursor: pointer; border-radius: 4px;
+}
+.col-option:hover { background-color: rgba(0,0,0,0.05); }
+.col-option span { font-size: 0.9rem; user-select: none; color: var(--text-main); }
+
+/* --- 3. CONTENEUR DU TABLEAU (SCROLLABLE) --- */
+.table-full-wrapper {
+  /* Prend tout l'espace vertical restant */
+  flex: 1;
+
+  /* Active le scroll vertical uniquement ici */
+  overflow-y: auto;
+  overflow-x: hidden; /* Pas de scroll horizontal */
+
+  background-color: var(--header-bg);
+  padding: 0;
+  /* On enlève les bordures latérales et l'arrondi du bas pour le style pleine largeur */
+  /* border: 1px solid var(--border-color); */
+  /* border-top: none; */
+  /* border-radius: 0 0 8px 8px; */
+}
+
+.full-width-table {
+  width: 100%;
+  border-collapse: collapse;
+  /* IMPORTANT : Force les colonnes à respecter la largeur disponible */
+  table-layout: fixed;
+}
+
+.full-width-table th {
+  background-color: var(--sidebar-bg); color: white;
+  padding: 12px 10px; text-align: left;
+  position: sticky; top: 0; z-index: 10;
+  font-size: 0.85rem;
+  border-right: 1px solid rgba(255,255,255,0.1);
+}
+
+.full-width-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-main); font-size: 0.85rem;
+
+  /* GESTION DES TEXTES LONGS : Retour à la ligne forcé */
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  vertical-align: top;
+}
+
+/* Zébrure */
+.full-width-table tbody tr:nth-child(even) { background-color: rgba(0,0,0,0.02); }
+[data-theme='Sombre'] .full-width-table tbody tr:nth-child(even) { background-color: rgba(255,255,255,0.03); }
+
+/* Input recherche compact */
+.search-box.compact {
+  display: flex; align-items: center; background: rgba(255,255,255,0.2);
+  border-radius: 4px; padding: 4px; margin-top: 5px;
+}
+.search-box.compact input {
+  border:none; background:transparent; color:white; width:100%; font-size: 0.75rem;
+}
+.search-box.compact input::placeholder { color: rgba(255,255,255,0.6); }
+
+/* Badges */
+.status-badge {
+  display: inline-block; padding: 4px 8px; border-radius: 12px;
+  font-size: 0.7rem; font-weight: bold; min-width: 40px; text-align: center; white-space: nowrap;
+}
+.badge-ok { background: #d4edda; color: #155724; }
+.badge-nok { background: #f8d7da; color: #721c24; }
+.badge-neutral { background: #eee; color: #555; }
+
+/* États de chargement */
+.loading-state, .empty-state {
+  display: flex; justify-content: center; align-items: center;
+  height: 200px; color: var(--text-main); opacity: 0.6; font-size: 1.1rem;
+}
+
+/* Bouton Ping Unitaire */
+.btn-mini-ping {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--text-main);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-mini-ping:hover:not(:disabled) {
+  background-color: rgba(var(--primary-color), 0.1);
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-mini-ping:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Animation de rotation pour le Loader */
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

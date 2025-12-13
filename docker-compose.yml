@@ -29,6 +29,8 @@ services:
       DB_USER: app_user
       DB_PASSWORD: app_user_password
       DB_NAME: app_db
+    volumes:
+      - ./csv_files:/app/csv_files
     depends_on:
       - mariadb_service
     networks:
