@@ -2,7 +2,7 @@ const db = require('../config/db');
 const fs = require('fs');
 const csv = require('csv-parser');
 const ping = require('ping');
-const si = require('systeminformation'); // IMPORT NÉCESSAIRE
+const si = require('systeminformation'); 
 
 const CSV_PATH = '/app/csv_files/pip.csv'; // Chemin dans le conteneur
 
@@ -13,7 +13,6 @@ exports.importCsvData = async (req, res) => {
 
     console.log(`[DEBUG] Recherche du fichier CSV ici : ${CSV_PATH}`);
 
-    // Lecture du fichier
     if (!fs.existsSync(CSV_PATH)) {
         console.error(`[ERREUR] Le fichier n'existe pas à l'emplacement : ${CSV_PATH}`);
         try {
@@ -26,7 +25,7 @@ exports.importCsvData = async (req, res) => {
     }
 
     fs.createReadStream(CSV_PATH)
-        .pipe(csv({ separator: ';' })) // SEPARATEUR POINT-VIRGULE
+        .pipe(csv({ separator: ';' })) 
         .on('headers', (headerList) => {
             headerList.forEach(h => headers.push(h));
         })
@@ -35,21 +34,16 @@ exports.importCsvData = async (req, res) => {
             if (headers.length === 0) return res && res.status(400).json({ message: "CSV vide" });
 
             try {
-                // A. Supprimer l'ancienne table si elle existe
                 await db.query('DROP TABLE IF EXISTS pip_data');
 
-                // B. Construire la requête CREATE TABLE dynamiquement
-                // On remplace les espaces par des underscores pour les noms de colonnes SQL
                 const columnsSql = headers.map(h => {
                     const cleanHeader = h.trim().replace(/\s+/g, '_'); 
                     return `\`${cleanHeader}\` VARCHAR(255)`;
                 }).join(', ');
 
-                // On ajoute une colonne ID technique
                 const createTableSql = `CREATE TABLE pip_data (id INT AUTO_INCREMENT PRIMARY KEY, ${columnsSql})`;
                 await db.query(createTableSql);
 
-                // C. Insérer les données
                 for (const row of results) {
                     const values = headers.map(h => row[h]);
                     const placeholders = headers.map(() => '?').join(', ');
@@ -75,84 +69,94 @@ exports.getPipData = async (req, res) => {
         if (tables.length === 0) return res.json({ columns: [], rows: [] });
 
         const [rows] = await db.query('SELECT * FROM pip_data');
-        
         if (rows.length === 0) return res.json({ columns: [], rows: [] });
 
         const columns = Object.keys(rows[0]).filter(k => k !== 'id');
-
         res.json({ columns, rows });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-// --- 3. TÂCHE AUTOMATIQUE : PING & INDICATEURS ---
+// --- 3. TÂCHE AUTOMATIQUE : PING & INDICATEURS & ALARMES ---
 exports.runPingTask = async () => {
-    console.log("--- Démarrage de la tâche PING & INDICATEURS ---");
+    console.log("--- Démarrage de la tâche PING & ALARMES ---");
     
     try {
         const [tables] = await db.query("SHOW TABLES LIKE 'pip_data'");
         if (tables.length === 0) return console.log("Table pip_data inexistante, pas de ping.");
 
-        const [rows] = await db.query('SELECT id, IP FROM pip_data');
+        // MODIF : On récupère aussi NOM, LOCALISATION et ETAT_COM pour les alarmes
+        const [rows] = await db.query('SELECT id, NOM_EQUIPEMENT, IP, LOCALISATION, ETAT_COM FROM pip_data');
         if (rows.length === 0) return;
 
-        // VARIABLES POUR LES STATISTIQUES
         let totalEquipements = 0;
         let nbReponseOK = 0;
         let sommeLatence = 0;
         let sommePertePaquets = 0;
 
-        // 1. BOUCLE DE PING
         for (const row of rows) {
             if (!row.IP) continue;
             totalEquipements++;
 
-            // On ping (timeout 2s)
-            // ping.promise.probe retourne un objet avec : alive (bool), time (ms), packetLoss (%)
-            const res = await ping.promise.probe(row.IP, { timeout: 2 });
-            
-            const etat = res.alive ? 'OK' : 'NOK';
-            
-            // Mise à jour BDD PIP_DATA
-            await db.query('UPDATE pip_data SET ETAT_COM = ? WHERE id = ?', [etat, row.id]);
+            const oldEtat = row.ETAT_COM; // État avant le ping
 
-            // Accumulation des stats
+            // Ping
+            const res = await ping.promise.probe(row.IP, { timeout: 2 });
+            const newEtat = res.alive ? 'OK' : 'NOK';
+            
+            // --- LOGIQUE ALARME ---
+            // On déclenche si l'état change et que l'ancien état existait (non null)
+            if (oldEtat && oldEtat !== newEtat) {
+                let messageAlarme = '';
+                
+                if (oldEtat === 'OK' && newEtat === 'NOK') {
+                    messageAlarme = 'Alarme';
+                } else if (oldEtat === 'NOK' && newEtat === 'OK') {
+                    messageAlarme = 'Retour à la normale';
+                }
+
+                if (messageAlarme) {
+                    await db.query(
+                        `INSERT INTO alarmes (nom, IP, localisation, etat) VALUES (?, ?, ?, ?)`,
+                        [row.NOM_EQUIPEMENT, row.IP, row.LOCALISATION, messageAlarme]
+                    );
+                    console.log(`[ALARME] ${row.IP} : ${messageAlarme}`);
+                }
+            }
+            // ----------------------
+
+            // Mise à jour BDD PIP_DATA
+            await db.query('UPDATE pip_data SET ETAT_COM = ? WHERE id = ?', [newEtat, row.id]);
+
+            // Stats
             if (res.alive) {
                 nbReponseOK++;
-                // res.time peut être 'unknown', on s'assure que c'est un nombre
                 const latence = parseFloat(res.time) || 0;
                 sommeLatence += latence;
             }
-
-            // res.packetLoss est une string "0.000", on convertit
             const perte = parseFloat(res.packetLoss) || 0;
             sommePertePaquets += perte;
         }
 
-        // 2. CALCULS DES RÉSULTATS
+        // --- CALCULS INDICATEURS ---
         const tauxCom = totalEquipements > 0 ? (nbReponseOK / totalEquipements) * 100 : 0;
         const delaiMoyen = nbReponseOK > 0 ? Math.round(sommeLatence / nbReponseOK) : 0;
         const moyennePerte = totalEquipements > 0 ? (sommePertePaquets / totalEquipements) : 0;
 
-        // 3. RÉCUPÉRATION DES INFOS SYSTÈME (CPU / RÉSEAU)
-        // Note: Dans Docker, cela remonte les stats du conteneur, ce qui est une bonne approximation
+        // Infos Système
         const cpuLoad = await si.currentLoad();
         const networkStats = await si.networkStats();
 
-        const utilisationCpu = cpuLoad.currentLoad || 0; // Pourcentage CPU actuel
-        
-        // Pour la bande passante, on va faire une estimation basée sur le trafic TX (transmission) en octets/sec
-        // Si networkStats est un tableau (plusieurs interfaces), on prend la première (eth0)
+        const utilisationCpu = cpuLoad.currentLoad || 0;
         const netStat = Array.isArray(networkStats) && networkStats.length > 0 ? networkStats[0] : {};
         
-        // Estimation arbitraire pour l'exercice : 100% = 10Mo/s (soit 10*1024*1024 octets)
-        const debitMaxEstime = 10 * 1024 * 1024; 
+        const debitMaxEstime = 10 * 1024 * 1024; // 10 Mo/s pour test
         const debitActuel = netStat.tx_sec || 0;
         let utilisationBP = (debitActuel / debitMaxEstime) * 100;
-        if(utilisationBP > 100) utilisationBP = 100; // Cap à 100
+        if(utilisationBP > 100) utilisationBP = 100;
 
-        // 4. ENREGISTREMENT DANS LA TABLE INDICATEURS
+        // Enregistrement Indicateurs
         const insertQuery = `
             INSERT INTO indicateurs 
             (taux_de_com, delai_rep, perte_paquets, utilisation_bande_passante, utilisation_cpu) 
@@ -160,11 +164,11 @@ exports.runPingTask = async () => {
         `;
         
         await db.query(insertQuery, [
-            tauxCom.toFixed(2),      // Float (2 décimales)
-            delaiMoyen,              // Int
-            moyennePerte.toFixed(2), // Float
-            utilisationBP.toFixed(2),// Float
-            utilisationCpu.toFixed(2)// Float
+            tauxCom.toFixed(2),      
+            delaiMoyen,              
+            moyennePerte.toFixed(2), 
+            utilisationBP.toFixed(2),
+            utilisationCpu.toFixed(2)
         ]);
 
         console.log(`[STATS] Com: ${tauxCom.toFixed(1)}% | Latence: ${delaiMoyen}ms | CPU: ${utilisationCpu.toFixed(1)}%`);
@@ -177,10 +181,7 @@ exports.runPingTask = async () => {
 
 // --- 4. DÉCLENCHER LE PING GLOBAL MANUELLEMENT ---
 exports.forcePing = async (req, res) => {
-    // On répond tout de suite au frontend pour ne pas bloquer l'interface
     res.json({ message: "Scan de ping lancé en arrière-plan..." });
-    
-    // On lance la tâche lourde
     await exports.runPingTask();
 };
 
@@ -193,15 +194,42 @@ exports.pingSingleDevice = async (req, res) => {
     }
 
     try {
-        // 1. On effectue le ping (timeout 2s)
+        // 1. Récupérer l'ancien état pour comparer
+        const [rows] = await db.query('SELECT NOM_EQUIPEMENT, LOCALISATION, ETAT_COM FROM pip_data WHERE id = ?', [id]);
+        
+        let oldEtat = null;
+        let nomEquip = 'Inconnu';
+        let loc = 'Inconnue';
+
+        if (rows.length > 0) {
+            oldEtat = rows[0].ETAT_COM;
+            nomEquip = rows[0].NOM_EQUIPEMENT;
+            loc = rows[0].LOCALISATION;
+        }
+
+        // 2. Ping
         const result = await ping.promise.probe(ip, { timeout: 2 });
-        const etat = result.alive ? 'OK' : 'NOK';
+        const newEtat = result.alive ? 'OK' : 'NOK';
 
-        // 2. On met à jour la base de données pour cette ligne spécifique
-        await db.query('UPDATE pip_data SET ETAT_COM = ? WHERE id = ?', [etat, id]);
+        // 3. Détection Alarme (Même logique que le Cron)
+        if (oldEtat && oldEtat !== newEtat) {
+             let messageAlarme = '';
+             if (oldEtat === 'OK' && newEtat === 'NOK') messageAlarme = 'Alarme';
+             else if (oldEtat === 'NOK' && newEtat === 'OK') messageAlarme = 'Retour à la normale';
 
-        // 3. On renvoie le nouvel état au frontend
-        res.json({ success: true, id: id, newStatus: etat });
+             if (messageAlarme) {
+                 await db.query(
+                    `INSERT INTO alarmes (nom, IP, localisation, etat) VALUES (?, ?, ?, ?)`,
+                    [nomEquip, ip, loc, messageAlarme]
+                 );
+                 console.log(`[ALARME UNITAIRE] ${ip} : ${messageAlarme}`);
+             }
+        }
+
+        // 4. Update PIP_DATA
+        await db.query('UPDATE pip_data SET ETAT_COM = ? WHERE id = ?', [newEtat, id]);
+
+        res.json({ success: true, id: id, newStatus: newEtat });
 
     } catch (error) {
         console.error("Erreur Ping Unitaire:", error);

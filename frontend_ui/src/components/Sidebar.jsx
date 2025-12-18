@@ -8,7 +8,7 @@ const Sidebar = () => {
   const menuItems = [
     { path: '/', name: 'Dashboard', icon: <BarChart3 size={20} /> },
     { path: '/pip', name: 'PIP', icon: <Database size={20} /> },
-    { path: '/admin', name: 'Admin', icon: <LayoutDashboard size={20} /> },
+    { path: '/admin', name: 'Applications', icon: <LayoutDashboard size={20} /> },
     { path: '/alarmes', name: 'Alarmes', icon: <Bell size={20} /> },
     { path: '/profil', name: 'Profil', icon: <User size={20} /> },
   ];

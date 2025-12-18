@@ -7,19 +7,22 @@ const cron = require('node-cron');
 const authRoutes = require('./routes/auth_routes');
 const pipRoutes = require('./routes/pip_routes');
 const dashboardRoutes = require('./routes/dashboard_routes');
-
+const alarmesRoutes = require('./routes/alarmes_routes');
 const pipController = require('./controllers/pip_controller');
+const detectiveRoutes = require('./routes/detective_routes');
 
 const app = express();
 const port = process.env.PORT || 5000;
 
 app.use(express.json());
 app.use(cors());
-app.use('/api/dashboard', dashboardRoutes);
 
 // --- DÉFINITION DES ROUTES ---
+app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/pip', pipRoutes);
+app.use('/api/alarmes', alarmesRoutes);
+app.use('/api/detective', detectiveRoutes);
 
 // --- PLANIFICATEUR DE TÂCHES (CRON) ---
 // S'exécute toutes les 15 minutes pour pinger les IPs

@@ -34,3 +34,14 @@ CREATE TABLE alarmes (
     date_heure TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     etat VARCHAR(50)
 );
+
+-- 4. Table Detective
+CREATE TABLE detective (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    equipement_nom VARCHAR(255),
+    ip_equipement VARCHAR(50),
+    ancien_etat VARCHAR(255),
+    nouvel_etat VARCHAR(255),
+    modifie_par VARCHAR(100),
+    date_modif TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

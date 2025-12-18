@@ -117,11 +117,7 @@ const Dashboard = () => {
             </LineChart>
           </ResponsiveContainer>
         </div>
-        <div className="graph-axis-labels">
-            <span>t-24h</span>
-            <span>t-12h</span>
-            <span>t0</span>
-        </div>
+        
       </div>
 
       {/* 3. ÉVOLUTION */}
