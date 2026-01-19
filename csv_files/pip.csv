@@ -1,12 +1,18 @@
 ﻿NIVEAU;COMPARTIMENT;TYPE EQUIPEMENT;LOT;NUMERO;NOM EQUIPEMENT;LOCALISATION;PROTOCOLE;IP;MAC;Adresse;Vitesse;Bit de stop;Parite;Adresse 1;Adresse 2;Vitesse MBUS;ETAT COM;TEST FONCTIONNEMENT;DERNIERE MODIF LE;DERNIERE MODIF PAR
--3;/;ECY-PTU-208: ECY-208;CVC;/;PTU Salle Réunion;PTU Salle Réunion;BACNET IP;192.168.24.117;38:AB:41:B3:F1:29;/;/;;;;;;;;;
--3;/;ECY-303;CVC;/;303 non license;TGS1;BACNET IP;192.168.24.121;38:AB:41:B3:E6:CD;/;/;;;;;;;;;
--1;IGH;ECY-303;CVC;/;ABEL 1 CTA CHIMIE 212;Local CFO;BACNET IP;192.168.24.193;/;/;/;;;;;;;;;
--1;/;GOOGLE;CVC;/;PTU Onduleur CFO;Local Onduleur CFO;BACNET IP;8.8.8.8;38:AB:41:B3:DE:B7;/;/;;;;;;;;;
-Niv 0;CB;ECY-PTU-208: ECY-208;GTB;1;PTU-VCO-R00-CB-05;/;BACNET IP;192.168.24.187;/;null;/;;;;;;;;;
-Niv 0;CB;ECx-Blind-4-volet: ECx-Blind-4-volet;GTB;1;PTU-VCO-R00-CB-05-ST-03;/;Subnet;192.168.24.187;/;3;/;;;;;;;;;
+RDC;Filière PAUC;SIEMENS SIMATIC ET 200SP;UniLaSalle;1;Automate 1;Labo. Génie Manu.;MODBUS;172.16.1.81;/;/;/;;;;;;;;;
+RDC;Filière PAUC;SIEMENS SIMATIC ET 200SP;UniLaSalle;1;Automate 2;Labo. Génie Manu.;MODBUS;172.16.1.82;/;/;/;;;;;;;;;
+RDC;Filière PAUC;SIEMENS SIMATIC ET 200SP;UniLaSalle;1;Automate 3;Labo. Génie Manu.;MODBUS;172.16.1.83;/;/;/;;;;;;;;;
+RDC;Filière PAUC;SIEMENS SIMATIC ET 200SP;UniLaSalle;1;Automate 4;Labo. Génie Manu.;MODBUS;172.16.1.84;/;/;/;;;;;;;;;
+RDC;Filière PAUC;SIEMENS SIMATIC ET 200SP;UniLaSalle;1;Automate 5;Labo. Génie Manu.;MODBUS;172.16.1.85;/;/;/;;;;;;;;;
+RDC;Filière PAUC;SIEMENS SIMATIC ET 200SP;UniLaSalle;1;Automate 6;Labo. Génie Manu.;MODBUS;172.16.1.86;/;/;/;;;;;;;;;
+RDC;Filière PAUC;SIEMENS SIMATIC ET 200SP;UniLaSalle;1;Zone 1;Mini Usine;MODBUS;172.16.1.91;/;/;/;;;;;;;;;
+RDC;Filière PAUC;SIEMENS SIMATIC ET 200SP;UniLaSalle;1;Zone 2;Mini Usine;MODBUS;172.16.1.92;/;/;/;;;;;;;;;
+RDC;Filière PAUC;SIEMENS SIMATIC ET 200SP;UniLaSalle;1;Zone 3;Mini Usine;MODBUS;172.16.1.93;/;/;/;;;;;;;;;
+RDC;Filière PAUC;SIEMENS SIMATIC ET 200SP;UniLaSalle;1;Zone 4;Mini Usine;MODBUS;172.16.1.94;/;/;/;;;;;;;;;
+RDC;Filière PAUC;SIEMENS SIMATIC ET 200SP;UniLaSalle;1;Zone 5;Mini Usine;MODBUS;172.16.1.95;/;/;/;;;;;;;;;
+RDC;Filière PAUC;SIEMENS SIMATIC ET 200SP;UniLaSalle;1;Zone 6;Mini Usine;MODBUS;172.16.1.96;/;/;/;;;;;;;;;
 Niv 0;CB;ECx-Blind-4-volet: ECx-Blind-4-volet;GTB;1;PTU-VCO-R00-CB-05-ST-04;/;Subnet;192.168.24.187;/;4;/;;;;;;;;;
-Niv 0;CB;ECY-PTU-208: ECY-208;GTB;1;PTU-VCO-R00-CB-04;/;BACNET IP;192.168.00.44;/;null;/;;;;;;;;;
+Niv 0;CB;GOOGLE;GTB;1;PTU-VCO-R00-CB-04;/;BACNET IP;8.8.8.8;/;null;/;;;;;;;;;
 Niv 0;CB;ECx-Blind-4-volet: ECx-Blind-4-volet;GTB;1;PTU-VCO-R00-CB-04-ST-03;/;Subnet;192.168.00.44;/;3;/;;;;;;;;;
 Niv 0;CB;ECx-Blind-4-volet: ECx-Blind-4-volet;GTB;1;PTU-VCO-R00-CB-04-ST-04;/;Subnet;192.168.00.44;/;4;/;;;;;;;;;
 Niv 0;CB;;GTB;1;Attente Stores - GTB: Attente Stores - GTB;/;IO;192.168.01.58;/;null;/;;;;;;;;;

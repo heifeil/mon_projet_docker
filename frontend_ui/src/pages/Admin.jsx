@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ArrowLeft, Search, LayoutDashboard, Terminal, Database } from 'lucide-react';
-import Detective from './apps/Detective'; // Import de la sous-app
+import { ArrowLeft, Search, LayoutDashboard, Activity } from 'lucide-react'; // Ajout de Activity
+import Detective from './apps/Detective'; 
+import VariableMonitor from './apps/VariableMonitor'; // Import de la nouvelle app
 import './Admin.css';
 
 const Admin = () => {
@@ -14,12 +15,16 @@ const Admin = () => {
       id: 'detective',
       name: 'Détective',
       icon: <Search size={32} />,
-      roleRequired: 'admin', // Restriction
+      roleRequired: 'admin', // Visible uniquement par les admins
       description: "Investigation et analyse de logs"
     },
-    // Exemples de futures apps (non cliquables pour l'instant)
-    { id: 'console', name: 'Console', icon: <Terminal size={32} />, roleRequired: 'admin', description: "Terminal serveur" },
-    { id: 'db_manager', name: 'Base de Données', icon: <Database size={32} />, roleRequired: 'admin', description: "Gestion SQL directe" },
+    {
+      id: 'variables',
+      name: 'Suivi de Variables',
+      icon: <Activity size={32} />,
+      roleRequired: 'all', // Visible par tout le monde (User + Admin)
+      description: "Lecture temps réel Modbus/BacNET"
+    }
   ];
 
   // Fonction pour rendre l'application active
@@ -27,8 +32,8 @@ const Admin = () => {
     switch (activeApp) {
       case 'detective':
         return <Detective />;
-      case 'console':
-        return <div className="placeholder-app">Application Console en construction...</div>;
+      case 'variables':
+        return <VariableMonitor />;
       default:
         return <div>Application introuvable</div>;
     }
@@ -71,6 +76,7 @@ const Admin = () => {
           <div className="apps-grid">
             {apps.map((app) => {
               // Vérification des droits
+              // Si le rôle requis est 'admin' et que l'utilisateur n'est pas admin, on ne l'affiche pas.
               if (app.roleRequired === 'admin' && user?.role !== 'admin') return null;
 
               return (
