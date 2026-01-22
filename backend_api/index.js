@@ -12,6 +12,8 @@ const dashboardRoutes = require('./routes/dashboard_routes');
 const alarmesRoutes = require('./routes/alarmes_routes');
 const detectiveRoutes = require('./routes/detective_routes');
 const variableRoutes = require('./routes/variable_routes');
+// Note : Le nom du fichier contient des underscores, c'est correct pour le require
+const monitoredAlarmsRoutes = require('./routes/monitored_alarms_routes');
 
 // Import des contrôleurs (pour les tâches de fond)
 const pipController = require('./controllers/pip_controller');
@@ -20,12 +22,16 @@ const variableController = require('./controllers/variable_controller');
 // --- DÉFINITION DES ROUTES ---
 app.use(express.json());
 app.use(cors());
+
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/pip', pipRoutes);
 app.use('/api/alarmes', alarmesRoutes);
 app.use('/api/detective', detectiveRoutes);
 app.use('/api/variables', variableRoutes);
+
+// --- CORRECTION ICI (Tiret au lieu d'underscore) ---
+app.use('/api/monitored-alarms', monitoredAlarmsRoutes); 
 
 // --- PLANIFICATEUR DE TÂCHES (CRON) ---
 // S'exécute toutes les 15 minutes pour pinger les IPs

@@ -1,48 +1,34 @@
-/* CONTAINER GLOBAL : GRID */
+/* CONTAINER GLOBAL */
 .dashboard-container {
   display: grid;
   grid-template-columns: 350px 1fr;
-  /* Répartition hauteur : Haut 40%, Milieu 15%, Bas 45% */
   grid-template-rows: 4fr 1.5fr 4.5fr;
-  
-  /* MODIFICATION : Espaces réduits au minimum (5px) */
   gap: 10px; 
   padding: 10px; 
-  
-  /* On prend 100% de la hauteur du parent (main-content) qui fait déjà 100% de l'écran - header */
   height: 100%; 
   width: 100%;
-  
   background-color: var(--bg-color); 
   color: var(--text-main);
   box-sizing: border-box;
-  
-  /* Coupe tout ce qui dépasse */
   overflow: hidden; 
 }
 
 /* STYLE GÉNÉRIQUE DES CARTES */
 .card {
   background-color: var(--header-bg); 
-  border-radius: 6px; /* Arrondi un peu plus discret */
-  
-  /* Padding interne serré */
+  border-radius: 6px; 
   padding: 8px; 
-  
   border: 1px solid var(--border-color); 
   display: flex;
   flex-direction: column;
   box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-  
-  /* Obligatoire pour que la carte ne pousse pas la grille */
   min-height: 0; 
-  height: 100%;  
+  height: 100%;  
 }
 
 .card h3 {
   margin: 0 0 5px 0;
   padding-bottom: 5px;
-  
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--header-text); 
@@ -51,134 +37,93 @@
   flex-shrink: 0; 
 }
 
-/* 1. JAUGE (Haut Gauche) */
-.gauge-card {
-  grid-column: 1;
-  grid-row: 1;
-}
-
+/* 1. JAUGE */
+.gauge-card { grid-column: 1; grid-row: 1; }
 .gauge-wrapper {
-  position: relative;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: 0;
+  position: relative; flex: 1; display: flex; flex-direction: column; justify-content: center; min-height: 0;
 }
-
 .gauge-value {
-  position: absolute;
-  top: 65%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 2.2rem; 
-  font-weight: bold;
-  color: var(--primary-color);
+  position: absolute; top: 65%; left: 50%; transform: translate(-50%, -50%);
+  font-size: 2.2rem; font-weight: bold; color: var(--primary-color);
 }
-
 .gauge-labels {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  padding: 0 10px; 
-  box-sizing: border-box;
-  margin-top: -15px;
-  font-size: 0.8rem;
-  font-weight: bold;
-  color: var(--text-main);
-  opacity: 0.8;
-  z-index: 10;
+  display: flex; justify-content: space-between; width: 100%; padding: 0 10px; 
+  box-sizing: border-box; margin-top: -15px; font-size: 0.8rem; font-weight: bold; color: var(--text-main); opacity: 0.8; z-index: 10;
 }
 
-/* 2. GRAPHIQUE (Droite - Prend 2 lignes) */
-.graph-card {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-}
+/* 2. GRAPHIQUE */
+.graph-card { grid-column: 2; grid-row: 1 / span 2; }
+.graph-wrapper { flex: 1; width: 100%; min-height: 0; }
 
-.graph-wrapper {
-  flex: 1;
-  width: 100%;
-  min-height: 0; 
-}
-
-.graph-axis-labels {
-    display: flex;
-    justify-content: space-between;
-    border-top: 1px solid var(--border-color);
-    padding-top: 2px;
-    font-size: 0.75rem; 
-    color: var(--text-main);
-    opacity: 0.7;
-    margin-left: 50px; 
-}
-
-/* 3. ÉVOLUTION (Milieu Gauche) */
+/* 3. ÉVOLUTION */
 .evo-card {
-  grid-column: 1;
-  grid-row: 2;
-  flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
+  grid-column: 1; grid-row: 2; flex-direction: row; justify-content: space-between; align-items: center;
 }
-
 .card-label { font-size: 1rem; color: var(--text-main); }
 .evo-value { font-size: 1.5rem; font-weight: bold; }
 .evo-value.pos { color: var(--primary-color); }
 .evo-value.neg { color: #e74c3c; }
 
-/* 4. INDICATEURS (Bas Gauche) */
-.indicators-card {
-  grid-column: 1;
-  grid-row: 3;
-}
-
+/* 4. INDICATEURS */
+.indicators-card { grid-column: 1; grid-row: 3; }
 .indicators-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-evenly; 
-  height: 100%;
-  font-size: 0.85rem;
+  list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; justify-content: space-evenly; height: 100%; font-size: 0.85rem;
 }
-
 .indicators-list li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: var(--text-main);
-  padding: 2px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  display: flex; justify-content: space-between; align-items: center; color: var(--text-main); padding: 2px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 .indicators-list li:last-child { border-bottom: none; }
-
 .val-theme { color: var(--primary-color); font-weight: bold; font-size: 0.95rem; }
 
-/* 5. ALARMES (Bas Droite) */
-.alarms-card {
-  grid-column: 2;
-  grid-row: 3;
+/* 5. ALARMES (WIDGET) */
+.alarms-card { grid-column: 2; grid-row: 3; }
+
+.dash-card-header {
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid var(--border-color); padding-bottom: 5px; margin-bottom: 5px;
+}
+.dash-card-header h3 { border-bottom: none; margin: 0; padding: 0; }
+
+.badge-count {
+    background-color: #e74c3c; color: white; padding: 1px 6px;
+    border-radius: 10px; font-size: 0.75rem; font-weight: bold;
 }
 
-.alarms-content {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.alarms-content { flex: 1; overflow-y: auto; }
+
+/* STYLE DES ALARMES */
+.alarm-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+
+.alarm-item {
+    background-color: rgba(231, 76, 60, 0.1); 
+    border-left: 3px solid #e74c3c;
+    padding: 6px 10px;
+    border-radius: 4px;
+    display: flex; flex-direction: column; gap: 2px;
 }
 
-.empty-alarms { color: var(--text-main); opacity: 0.5; text-align: center; font-size: 0.9rem; }
+.alarm-info {
+    display: flex; justify-content: space-between;
+    font-weight: bold; font-size: 0.85rem; color: #e74c3c;
+}
+.alarm-ip { font-weight: normal; opacity: 0.8; font-size: 0.75rem; color: var(--text-main); }
+
+.alarm-meta {
+    display: flex; justify-content: space-between;
+    font-size: 0.75rem; color: var(--text-main); opacity: 0.8;
+}
+.alarm-time { font-weight: bold; }
+
+/* VIDE */
+.empty-alarms { 
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    height: 100%; color: var(--text-main); opacity: 0.6; text-align: center; font-size: 0.9rem; 
+}
 
 /* RESPONSIVE */
 @media (max-width: 1000px) {
   .dashboard-container {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto;
-    height: auto;
-    overflow-y: auto; 
-    display: block;
+    grid-template-columns: 1fr; grid-template-rows: auto; height: auto; overflow-y: auto; display: block;
   }
   .card { margin-bottom: 10px; height: 300px; }
   .evo-card { height: 80px; }

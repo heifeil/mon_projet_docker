@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ArrowLeft, Search, LayoutDashboard, Activity } from 'lucide-react'; // Ajout de Activity
+// 1. AJOUT DE AlertTriangle DANS LES IMPORTS
+import { ArrowLeft, Search, LayoutDashboard, Activity, AlertTriangle } from 'lucide-react'; 
 import Detective from './apps/Detective'; 
-import VariableMonitor from './apps/VariableMonitor'; // Import de la nouvelle app
+import VariableMonitor from './apps/VariableMonitor'; 
+// 2. IMPORT DU NOUVEAU COMPOSANT
+import MonitoredAlarms from './apps/MonitoredAlarms';
 import './Admin.css';
 
 const Admin = () => {
@@ -15,15 +18,23 @@ const Admin = () => {
       id: 'detective',
       name: 'Détective',
       icon: <Search size={32} />,
-      roleRequired: 'admin', // Visible uniquement par les admins
+      roleRequired: 'admin', 
       description: "Investigation et analyse de logs"
     },
     {
       id: 'variables',
       name: 'Suivi de Variables',
       icon: <Activity size={32} />,
-      roleRequired: 'all', // Visible par tout le monde (User + Admin)
+      roleRequired: 'all', 
       description: "Lecture temps réel Modbus/BacNET"
+    },
+    // 3. AJOUT DE LA NOUVELLE APPLICATION DANS LA LISTE
+    {
+      id: 'monitored-alarms',
+      name: 'Alarmes Variables',
+      icon: <AlertTriangle size={32} />, // Icône d'alerte
+      roleRequired: 'all', // Visible par tout le monde
+      description: "Historique des seuils (Min/Max)"
     }
   ];
 
@@ -34,6 +45,9 @@ const Admin = () => {
         return <Detective />;
       case 'variables':
         return <VariableMonitor />;
+      // 4. AJOUT DU RENDU DE L'APPLICATION
+      case 'monitored-alarms':
+        return <MonitoredAlarms />;
       default:
         return <div>Application introuvable</div>;
     }
@@ -76,7 +90,6 @@ const Admin = () => {
           <div className="apps-grid">
             {apps.map((app) => {
               // Vérification des droits
-              // Si le rôle requis est 'admin' et que l'utilisateur n'est pas admin, on ne l'affiche pas.
               if (app.roleRequired === 'admin' && user?.role !== 'admin') return null;
 
               return (

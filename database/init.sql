@@ -92,7 +92,23 @@ CREATE TABLE monitored_points (
     dernier_update TIMESTAMP NULL,
     cree_par VARCHAR(100)
 );
+-- 3. Ajouter les colonnes à la table existante
+    ALTER TABLE monitored_points 
+    ADD COLUMN unite VARCHAR(20) DEFAULT '',
+    ADD COLUMN seuil_min FLOAT DEFAULT NULL,
+    ADD COLUMN seuil_max FLOAT DEFAULT NULL;
 
+-- 2. Créer la table des alarmes dédiées aux variables
+CREATE TABLE IF NOT EXISTS monitored_alarms (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    point_id INT NOT NULL,
+    type_seuil VARCHAR(10), -- 'MIN' ou 'MAX'
+    valeur FLOAT,
+    date_debut DATETIME DEFAULT CURRENT_TIMESTAMP,
+    date_fin DATETIME DEFAULT NULL,
+    etat VARCHAR(20) DEFAULT 'ACTIVE',
+    FOREIGN KEY (point_id) REFERENCES monitored_points(id) ON DELETE CASCADE
+);
 -- 4. Historique des valeurs
 CREATE TABLE points_history (
     id INT AUTO_INCREMENT PRIMARY KEY,

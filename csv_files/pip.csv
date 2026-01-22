@@ -11,6 +11,12 @@ RDC;Filière PAUC;SIEMENS SIMATIC ET 200SP;UniLaSalle;1;Zone 3;Mini Usine;MODBUS
 RDC;Filière PAUC;SIEMENS SIMATIC ET 200SP;UniLaSalle;1;Zone 4;Mini Usine;MODBUS;172.16.1.94;/;/;/;;;;;;;;;
 RDC;Filière PAUC;SIEMENS SIMATIC ET 200SP;UniLaSalle;1;Zone 5;Mini Usine;MODBUS;172.16.1.95;/;/;/;;;;;;;;;
 RDC;Filière PAUC;SIEMENS SIMATIC ET 200SP;UniLaSalle;1;Zone 6;Mini Usine;MODBUS;172.16.1.96;/;/;/;;;;;;;;;
+RDC;Filière PAUC;SIEMENS SIMATIC ET 200SP;UniLaSalle;1;Ascenseur 1;Labo. API;MODBUS;172.16.1.1;/;/;/;;;;;;;;;
+RDC;Filière PAUC;SIEMENS SIMATIC ET 200SP;UniLaSalle;1;Ascenseur 2;Labo. API;MODBUS;172.16.1.2;/;/;/;;;;;;;;;
+RDC;Filière PAUC;SIEMENS SIMATIC ET 200SP;UniLaSalle;1;Ascenseur 3;Labo. API;MODBUS;172.16.1.3;/;/;/;;;;;;;;;
+RDC;Filière PAUC;SIEMENS SIMATIC ET 200SP;UniLaSalle;1;Ascenseur 4;Labo. API;MODBUS;172.16.1.4;/;/;/;;;;;;;;;
+RDC;Filière PAUC;SIEMENS SIMATIC ET 200SP;UniLaSalle;1;Ascenseur 5;Labo. API;MODBUS;172.16.1.5;/;/;/;;;;;;;;;
+RDC;Filière PAUC;SIEMENS SIMATIC ET 200SP;UniLaSalle;1;Ascenseur 6;Labo. API;MODBUS;172.16.1.6;/;/;/;;;;;;;;;
 Niv 0;CB;ECx-Blind-4-volet: ECx-Blind-4-volet;GTB;1;PTU-VCO-R00-CB-05-ST-04;/;Subnet;192.168.24.187;/;4;/;;;;;;;;;
 Niv 0;CB;GOOGLE;GTB;1;PTU-VCO-R00-CB-04;/;BACNET IP;8.8.8.8;/;null;/;;;;;;;;;
 Niv 0;CB;ECx-Blind-4-volet: ECx-Blind-4-volet;GTB;1;PTU-VCO-R00-CB-04-ST-03;/;Subnet;192.168.00.44;/;3;/;;;;;;;;;

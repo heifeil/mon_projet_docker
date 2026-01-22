@@ -1,0 +1,150 @@
+.ma-container {
+    padding: 20px;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    height: 100%;
+    overflow-y: auto;
+}
+
+.ma-header {
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+.ma-header h2 {
+    display: flex; align-items: center; gap: 10px; margin: 0;
+    color: var(--header-text);
+}
+
+.ma-subtitle {
+    font-size: 0.9rem; opacity: 0.6; margin-left: 34px;
+}
+
+/* LISTE */
+.ma-list {
+    display: flex; flex-direction: column; gap: 15px;
+}
+
+.ma-empty {
+    text-align: center; opacity: 0.5; font-style: italic; margin-top: 30px;
+}
+
+/* CARTE PRINCIPALE */
+.ma-card {
+    background-color: var(--header-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+/* Style si alarme active */
+.ma-card.active-alarm {
+    border-left: 5px solid #e74c3c;
+    background-color: rgba(231, 76, 60, 0.05);
+}
+
+/* Style si tout va bien */
+.ma-card.resolved {
+    border-left: 5px solid #2ecc71;
+}
+
+.ma-card-main {
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    cursor: pointer;
+}
+
+.ma-card-main:hover {
+    background-color: rgba(255,255,255,0.02);
+}
+
+/* ICONES */
+.ma-icon-status {
+    display: flex; align-items: center; justify-content: center;
+}
+
+.active-alarm .ma-icon-status { color: #e74c3c; }
+.resolved .ma-icon-status { color: #2ecc71; }
+
+.icon-blink {
+    animation: blink-alarm 1s infinite;
+}
+
+@keyframes blink-alarm {
+    0% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
+}
+
+/* INFO TEXTE */
+.ma-info { flex: 1; }
+
+.ma-title { display: flex; align-items: baseline; gap: 10px; }
+.ma-title h3 { margin: 0; font-size: 1.1rem; }
+.ma-ip { font-size: 0.8rem; opacity: 0.6; font-family: monospace; }
+
+.ma-status-text { margin-top: 4px; font-size: 0.9rem; }
+.status-danger { color: #e74c3c; font-weight: bold; }
+.status-ok { color: #2ecc71; opacity: 0.8; }
+
+/* CONFIG SEUILS */
+.ma-config {
+    display: flex; gap: 10px; margin-right: 20px;
+}
+
+.badge-seuil {
+    background-color: rgba(255,255,255,0.1);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: var(--text-main);
+}
+
+.ma-toggle-btn {
+    background: none; border: none; color: var(--text-main); cursor: pointer; opacity: 0.5;
+}
+
+/* DROPDOWN HISTORIQUE */
+.ma-history-dropdown {
+    background-color: rgba(0,0,0,0.2);
+    border-top: 1px solid var(--border-color);
+    padding: 15px 20px;
+    animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+.ma-history-dropdown h4 {
+    margin: 0 0 10px 0; font-size: 0.9rem; opacity: 0.7; display: flex; align-items: center; gap: 8px;
+}
+
+.ma-history-table {
+    width: 100%; border-collapse: collapse; font-size: 0.85rem;
+}
+
+.ma-history-table th {
+    text-align: left; opacity: 0.5; padding: 5px; border-bottom: 1px solid var(--border-color); font-weight: normal;
+}
+
+.ma-history-table td {
+    padding: 8px 5px; border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.ma-history-table tr:last-child td { border-bottom: none; }
+
+.row-active {
+    background-color: rgba(231, 76, 60, 0.1);
+}
+
+.badge-etat {
+    padding: 2px 6px; border-radius: 3px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase;
+}
+.badge-etat.active { background-color: #e74c3c; color: white; }
+.badge-etat.resolved { background-color: #27ae60; color: white; }
+
+.text-active { color: #e74c3c; font-weight: bold; font-style: italic; }
