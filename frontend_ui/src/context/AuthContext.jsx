@@ -1,12 +1,29 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  // 1. INITIALIZATION: Check localStorage for existing session
+  const [user, setUser] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem('monitoring_user');
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch (error) {
+      console.error("Error parsing user from localStorage", error);
+      return null;
+    }
+  });
+
   const [token, setToken] = useState(localStorage.getItem('token') || null);
 
-  // --- LOGIN (Hybride : Email ou Username) ---
+  // 2. EFFECT: Apply theme on mount if user exists
+  useEffect(() => {
+    if (user && user.theme) {
+      document.documentElement.setAttribute('data-theme', user.theme);
+    }
+  }, [user]);
+
+  // --- LOGIN (Hybrid: Email or Username) ---
   const login = async (login_input, mot_de_passe) => {
     try {
       const response = await fetch('http://localhost:5000/api/auth/login', {
@@ -18,12 +35,15 @@ export const AuthProvider = ({ children }) => {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Erreur de connexion");
 
-      // Si succès
+      // Success
       setToken(data.token);
       setUser(data.user);
-      localStorage.setItem('token', data.token);
       
-      // Appliquer le thème de l'utilisateur dès la connexion
+      // Save to LocalStorage
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('monitoring_user', JSON.stringify(data.user)); // <--- PERSISTENCE ADDED
+      
+      // Apply theme immediately
       if (data.user.theme) {
         document.documentElement.setAttribute('data-theme', data.user.theme);
       }
@@ -33,7 +53,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // --- REGISTER (Avec Username) ---
+  // --- REGISTER (With Username) ---
   const register = async (email, username, mot_de_passe) => {
     try {
       const response = await fetch('http://localhost:5000/api/auth/register', {
@@ -51,17 +71,20 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // --- UPDATE THEME (Pour la page Profil) ---
+  // --- UPDATE THEME (For Profile page) ---
   const updateTheme = async (newTheme) => {
-    // 1. Mise à jour visuelle immédiate (CSS)
+    // 1. Visual update (CSS)
     document.documentElement.setAttribute('data-theme', newTheme);
     
-    // 2. Mise à jour de l'état local user
+    // 2. Local state update
     if (user) {
-      setUser({ ...user, theme: newTheme });
+      const updatedUser = { ...user, theme: newTheme };
+      setUser(updatedUser);
+      // Update LocalStorage to persist the new theme on reload
+      localStorage.setItem('monitoring_user', JSON.stringify(updatedUser)); 
     }
 
-    // 3. Sauvegarde en BDD (API Backend)
+    // 3. Database update (Backend API)
     if (user && user.id) {
       try {
         await fetch('http://localhost:5000/api/auth/update-theme', {
@@ -75,7 +98,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // --- CHANGE PASSWORD (NOUVEAU) ---
+  // --- CHANGE PASSWORD ---
   const changePassword = async (currentPassword, newPassword) => {
     if (!user || !user.id) return { success: false, message: "Utilisateur non connecté" };
 
@@ -104,6 +127,7 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setToken(null);
     localStorage.removeItem('token');
+    localStorage.removeItem('monitoring_user'); // <--- CLEAR STORAGE
     document.documentElement.removeAttribute('data-theme');
   };
 
@@ -114,7 +138,7 @@ export const AuthProvider = ({ children }) => {
       login, 
       register, 
       updateTheme, 
-      changePassword, // <--- Ajouté ici
+      changePassword, 
       logout, 
       isAuthenticated: !!user 
     }}>

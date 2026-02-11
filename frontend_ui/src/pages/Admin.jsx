@@ -34,7 +34,7 @@ const Admin = () => {
       name: 'Alarmes Variables',
       icon: <AlertTriangle size={32} />, // Icône d'alerte
       roleRequired: 'all', // Visible par tout le monde
-      description: "Historique des seuils (Min/Max)"
+      description: "Historique des dépassements de seuils"
     }
   ];
 
