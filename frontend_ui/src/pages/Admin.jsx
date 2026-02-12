@@ -1,96 +1,87 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-// 1. AJOUT DE AlertTriangle DANS LES IMPORTS
 import { ArrowLeft, Search, LayoutDashboard, Activity, AlertTriangle } from 'lucide-react'; 
 import Detective from './apps/Detective'; 
 import VariableMonitor from './apps/VariableMonitor'; 
-// 2. IMPORT DU NOUVEAU COMPOSANT
-import MonitoredAlarms from './apps/MonitoredAlarms';
+import MonitoredAlarms from './apps/MonitoredAlarms'; 
 import './Admin.css';
 
 const Admin = () => {
   const { user } = useAuth();
   const [activeApp, setActiveApp] = useState(null);
 
-  // Liste des applications disponibles
+  // --- CONFIGURATION DES APPS AVEC NIVEAU MINIMUM REQUIS (ID) ---
+  // 1=Lecteur, 2=Lecteur Avancé, 3=Opérateur, 4=Admin, 5=Super Admin
   const apps = [
     {
       id: 'detective',
       name: 'Détective',
       icon: <Search size={32} />,
-      roleRequired: 'admin', 
+      minRoleId: 4, // Requis : Admin (4) ou Super Admin (5)
       description: "Investigation et analyse de logs"
     },
     {
       id: 'variables',
       name: 'Suivi de Variables',
       icon: <Activity size={32} />,
-      roleRequired: 'all', 
+      minRoleId: 1, // Requis : Tout le monde
       description: "Lecture temps réel Modbus/BacNET"
     },
-    // 3. AJOUT DE LA NOUVELLE APPLICATION DANS LA LISTE
     {
       id: 'monitored-alarms',
       name: 'Alarmes Variables',
-      icon: <AlertTriangle size={32} />, // Icône d'alerte
-      roleRequired: 'all', // Visible par tout le monde
-      description: "Historique des dépassements de seuils"
+      icon: <AlertTriangle size={32} />,
+      minRoleId: 1, // Requis : Tout le monde
+      description: "Historique des seuils (Min/Max)"
     }
   ];
 
-  // Fonction pour rendre l'application active
   const renderActiveApp = () => {
     switch (activeApp) {
-      case 'detective':
-        return <Detective />;
-      case 'variables':
-        return <VariableMonitor />;
-      // 4. AJOUT DU RENDU DE L'APPLICATION
-      case 'monitored-alarms':
-        return <MonitoredAlarms />;
-      default:
-        return <div>Application introuvable</div>;
+      case 'detective': return <Detective />;
+      case 'variables': return <VariableMonitor />;
+      case 'monitored-alarms': return <MonitoredAlarms />;
+      default: return <div>Application introuvable</div>;
     }
   };
 
   return (
     <div className="admin-container">
       
-      {/* HEADER DE LA PAGE ADMIN */}
+      {/* HEADER */}
       <div className="admin-header">
         <div className="header-left">
           {activeApp ? (
-            // Mode App ouverte : Bouton retour
             <button onClick={() => setActiveApp(null)} className="back-button">
               <ArrowLeft size={20} />
               <span>Retour au Menu</span>
             </button>
           ) : (
-            // Mode Launcher : Titre
             <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
               <LayoutDashboard size={24} color="var(--primary-color)" />
               Applications
             </h2>
           )}
         </div>
-        
-        {/* Titre de l'app en cours (si ouverte) */}
         {activeApp && <h3 className="app-title-display">{apps.find(a => a.id === activeApp)?.name}</h3>}
       </div>
 
-      {/* CONTENU PRINCIPAL */}
+      {/* CONTENU */}
       <div className="admin-content">
         {activeApp ? (
-          // VUE APPLICATION
           <div className="app-view-wrapper">
             {renderActiveApp()}
           </div>
         ) : (
-          // VUE LAUNCHER (Grille d'icônes)
           <div className="apps-grid">
             {apps.map((app) => {
-              // Vérification des droits
-              if (app.roleRequired === 'admin' && user?.role !== 'admin') return null;
+              // --- SÉCURITÉ : VÉRIFICATION DU ROLE_ID ---
+              const userRoleId = user?.role_id || 0;
+
+              // Si le niveau de l'utilisateur est inférieur au niveau requis, on n'affiche pas le bouton
+              if (userRoleId < app.minRoleId) {
+                return null; 
+              }
 
               return (
                 <button 

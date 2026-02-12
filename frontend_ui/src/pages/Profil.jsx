@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; // Ajout de useEffect
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { 
   User, Shield, Palette, Info, LifeBuoy, LogOut, ChevronRight, ArrowLeft, Mail, Fingerprint, Lock, AlertTriangle 
@@ -6,7 +6,7 @@ import {
 import './Profil.css';
 
 const Profil = () => {
-  const { user, logout, updateTheme, changePassword } = useAuth(); // Ajout de changePassword
+  const { user, logout, updateTheme, changePassword } = useAuth();
   const [activeSection, setActiveSection] = useState('main');
 
   // --- ÉTATS POUR LE MOT DE PASSE ---
@@ -14,7 +14,7 @@ const Profil = () => {
   const [newPwd, setNewPwd] = useState('');
   const [confirmPwd, setConfirmPwd] = useState('');
   const [pwdMessage, setPwdMessage] = useState({ text: '', type: '' });
-  const [showConfirmPopup, setShowConfirmPopup] = useState(false); // Pour le popup
+  const [showConfirmPopup, setShowConfirmPopup] = useState(false);
 
   // Reset des champs quand on change de section
   useEffect(() => {
@@ -31,14 +31,12 @@ const Profil = () => {
     const result = await changePassword(currentPwd, newPwd);
     
     if (result.success) {
-      // Succès : On ferme le popup, on affiche le succès, et on attend 2s avant de revenir au menu
       setShowConfirmPopup(false);
       setPwdMessage({ text: result.message, type: 'success' });
       setTimeout(() => {
         setActiveSection('main');
       }, 2000);
     } else {
-      // Erreur : On ferme le popup et on affiche l'erreur
       setShowConfirmPopup(false);
       setPwdMessage({ text: result.message, type: 'error' });
     }
@@ -78,7 +76,8 @@ const Profil = () => {
               <div className="user-info">
                 <h3>{user.username}</h3>
                 <span className="user-email">{user.email}</span>
-                <span className="user-role-badge">{user.role}</span>
+                {/* CORRECTION ICI : Affichage sécurisé du rôle */}
+                <span className="user-role-badge">{user.role || 'Utilisateur'}</span>
               </div>
             </div>
 
@@ -125,12 +124,10 @@ const Profil = () => {
         );
 
       case 'perso':
-        // (Code existant pour perso...)
         return (
            <div className="sub-page">
             <SubHeader title="Informations Personnelles" />
             <div className="info-card">
-               {/* ... contenu perso inchangé ... */}
                <div className="info-row"><Fingerprint size={18} className="text-muted"/><div><label>Identifiant</label><p>{user.username}</p></div></div>
                <hr/>
                <div className="info-row"><Mail size={18} className="text-muted"/><div><label>Email</label><p>{user.email}</p></div></div>
@@ -138,7 +135,6 @@ const Profil = () => {
            </div>
         );
 
-      // --- SECTION SÉCURITÉ MISE À JOUR ---
       case 'security':
         return (
           <div className="sub-page">
@@ -188,7 +184,7 @@ const Profil = () => {
               <button 
                 className="btn-primary" 
                 disabled={!isChangeBtnEnabled} 
-                onClick={() => setShowConfirmPopup(true)} // Déclenche le popup
+                onClick={() => setShowConfirmPopup(true)}
                 style={{ width: '100%', marginTop: 10, opacity: isChangeBtnEnabled ? 1 : 0.5, cursor: isChangeBtnEnabled ? 'pointer' : 'not-allowed' }}
               >
                 Changer le mot de passe
@@ -197,10 +193,20 @@ const Profil = () => {
           </div>
         );
 
-      // (Autres cases inchangés: theme, about, support...)
-      case 'theme': return <div className="sub-page"><SubHeader title="Thème" /><div className="theme-grid">{['Spie Batignolles', 'Clair', 'Sombre'].map(t=><button key={t} className={`theme-option ${user.theme===t?'active':''}`} onClick={()=>updateTheme(t)}>{t}{user.theme===t&&<div className="dot"></div>}</button>)}</div></div>;
+      case 'theme': return (
+        <div className="sub-page">
+          <SubHeader title="Thème" />
+          <div className="theme-grid">
+            {['Spie Batignolles', 'Clair', 'Sombre'].map(t => (
+              <button key={t} className={`theme-option ${user.theme === t ? 'active' : ''}`} onClick={() => updateTheme(t)}>
+                {t}{user.theme === t && <div className="dot"></div>}
+              </button>
+            ))}
+          </div>
+        </div>
+      );
       case 'about': return <div className="sub-page"><SubHeader title="A propos"/><div className="info-card"><h3>Mon App v1.0</h3><p>App Dockerisée.</p></div></div>;
-      case 'support': return <div className="sub-page"><SubHeader title="Assistance"/><div className="info-card"><p>Contactez: support@spie.com</p></div></div>;
+      case 'support': return <div className="sub-page"><SubHeader title="Assistance"/><div className="info-card"><p>Contactez: support@spiebatignolles.fr</p></div></div>;
       default: return null;
     }
   };
@@ -208,7 +214,6 @@ const Profil = () => {
   return (
     <div className="profil-container">
       {renderContent()}
-      {/* Affichage conditionnel du popup par dessus tout */}
       {showConfirmPopup && <ConfirmationPopup />}
     </div>
   );
