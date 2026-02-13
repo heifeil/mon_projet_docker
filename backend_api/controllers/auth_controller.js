@@ -1,10 +1,10 @@
 const db = require('../config/db');
-const bcrypt = require('bcrypt'); // Assurez-vous d'utiliser bcrypt
+const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'mon_super_secret_temporaire';
 
-// --- INSCRIPTION (Adapté pour utiliser role_id par défaut) ---
+// --- INSCRIPTION ---
 exports.register = async (req, res) => {
     const { email, mot_de_passe, username } = req.body;
 
@@ -19,7 +19,6 @@ exports.register = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hash = await bcrypt.hash(mot_de_passe, salt);
         
-        // Récupérer l'ID du rôle Lecteur par défaut
         const [roleRows] = await db.query("SELECT id FROM user_roles WHERE nom = 'Lecteur'");
         const defaultRoleId = roleRows[0] ? roleRows[0].id : 1;
 
@@ -35,18 +34,26 @@ exports.register = async (req, res) => {
     }
 };
 
-// --- CONNEXION (Hybride) ---
+// --- CONNEXION (CORRIGÉE AVEC PERMISSIONS) ---
 exports.login = async (req, res) => {
     const { login_input, mot_de_passe } = req.body;
 
     try {
-        // ON JOINT LA TABLE DES ROLES POUR RECUPERER LES DROITS ET LE NOM DU ROLE
+        // ON JOINT LA TABLE DES ROLES POUR RECUPERER LES DROITS
         const query = `
-            SELECT u.*, r.nom as role_name, r.can_read, r.can_extract, r.can_write, r.is_admin, r.is_super_admin 
+            SELECT 
+                u.id, u.username, u.email, u.mot_de_passe, u.theme, u.role_id,
+                r.nom as role_name, 
+                r.can_read, 
+                r.can_extract, 
+                r.can_write, 
+                r.is_admin, 
+                r.is_super_admin 
             FROM utilisateurs u 
-            JOIN user_roles r ON u.role_id = r.id 
+            LEFT JOIN user_roles r ON u.role_id = r.id 
             WHERE u.email = ? OR u.username = ?
         `;
+        
         const [users] = await db.query(query, [login_input, login_input]);
         
         if (users.length === 0) return res.status(401).json({ message: "Identifiants incorrects" });
@@ -56,38 +63,38 @@ exports.login = async (req, res) => {
 
         if (!isMatch) return res.status(401).json({ message: "Identifiants incorrects" });
 
+        // Construction de l'objet utilisateur complet avec permissions
+        const userPayload = {
+            id: utilisateur.id,
+            email: utilisateur.email,
+            username: utilisateur.username,
+            theme: utilisateur.theme,
+            
+            // Rôles et Permissions (Convertis en booléens pour être sûr)
+            role: utilisateur.role_name, 
+            role_id: utilisateur.role_id,
+            
+            can_read: !!utilisateur.can_read,
+            can_extract: !!utilisateur.can_extract, // C'est lui qui débloque le bouton
+            can_write: !!utilisateur.can_write,
+            is_admin: !!utilisateur.is_admin,
+            is_super_admin: !!utilisateur.is_super_admin
+        };
+
         const token = jwt.sign(
             { id: utilisateur.id, role: utilisateur.role_name },
             JWT_SECRET,
             { expiresIn: '24h' }
         );
 
-        // Construction de l'objet renvoyé au frontend
         res.json({
             message: "Connexion réussie",
             token: token,
-            user: {
-                id: utilisateur.id,
-                email: utilisateur.email,
-                username: utilisateur.username,
-                theme: utilisateur.theme,
-                
-                // NOUVEAUX CHAMPS IMPORTANTS
-                role: utilisateur.role_name, // ex: "Admin" (pour l'affichage)
-                role_id: utilisateur.role_id, // ex: 4 (pour la logique > <)
-
-                permissions: {
-                    can_read: !!utilisateur.can_read,
-                    can_extract: !!utilisateur.can_extract,
-                    can_write: !!utilisateur.can_write,
-                    is_admin: !!utilisateur.is_admin,
-                    is_super_admin: !!utilisateur.is_super_admin
-                }
-            }
+            user: userPayload // Le frontend recevra user.can_extract = true
         });
 
     } catch (error) {
-        console.error(error);
+        console.error("Erreur Login:", error);
         res.status(500).json({ message: "Erreur serveur lors de la connexion" });
     }
 };

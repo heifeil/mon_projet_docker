@@ -86,7 +86,6 @@ exports.runPingTask = async () => {
         const [tables] = await db.query("SHOW TABLES LIKE 'pip_data'");
         if (tables.length === 0) return console.log("Table pip_data inexistante, pas de ping.");
 
-        // MODIF : On récupère aussi NOM, LOCALISATION et ETAT_COM pour les alarmes
         const [rows] = await db.query('SELECT id, NOM_EQUIPEMENT, IP, LOCALISATION, ETAT_COM FROM pip_data');
         if (rows.length === 0) return;
 
@@ -99,14 +98,13 @@ exports.runPingTask = async () => {
             if (!row.IP) continue;
             totalEquipements++;
 
-            const oldEtat = row.ETAT_COM; // État avant le ping
+            const oldEtat = row.ETAT_COM; 
 
             // Ping
             const res = await ping.promise.probe(row.IP, { timeout: 2 });
             const newEtat = res.alive ? 'OK' : 'NOK';
             
             // --- LOGIQUE ALARME ---
-            // On déclenche si l'état change et que l'ancien état existait (non null)
             if (oldEtat && oldEtat !== newEtat) {
                 let messageAlarme = '';
                 
@@ -124,7 +122,6 @@ exports.runPingTask = async () => {
                     console.log(`[ALARME] ${row.IP} : ${messageAlarme}`);
                 }
             }
-            // ----------------------
 
             // Mise à jour BDD PIP_DATA
             await db.query('UPDATE pip_data SET ETAT_COM = ? WHERE id = ?', [newEtat, row.id]);
@@ -151,7 +148,7 @@ exports.runPingTask = async () => {
         const utilisationCpu = cpuLoad.currentLoad || 0;
         const netStat = Array.isArray(networkStats) && networkStats.length > 0 ? networkStats[0] : {};
         
-        const debitMaxEstime = 10 * 1024 * 1024; // 10 Mo/s pour test
+        const debitMaxEstime = 10 * 1024 * 1024; 
         const debitActuel = netStat.tx_sec || 0;
         let utilisationBP = (debitActuel / debitMaxEstime) * 100;
         if(utilisationBP > 100) utilisationBP = 100;
@@ -194,7 +191,6 @@ exports.pingSingleDevice = async (req, res) => {
     }
 
     try {
-        // 1. Récupérer l'ancien état pour comparer
         const [rows] = await db.query('SELECT NOM_EQUIPEMENT, LOCALISATION, ETAT_COM FROM pip_data WHERE id = ?', [id]);
         
         let oldEtat = null;
@@ -207,11 +203,9 @@ exports.pingSingleDevice = async (req, res) => {
             loc = rows[0].LOCALISATION;
         }
 
-        // 2. Ping
         const result = await ping.promise.probe(ip, { timeout: 2 });
         const newEtat = result.alive ? 'OK' : 'NOK';
 
-        // 3. Détection Alarme (Même logique que le Cron)
         if (oldEtat && oldEtat !== newEtat) {
              let messageAlarme = '';
              if (oldEtat === 'OK' && newEtat === 'NOK') messageAlarme = 'Alarme';
@@ -226,7 +220,6 @@ exports.pingSingleDevice = async (req, res) => {
              }
         }
 
-        // 4. Update PIP_DATA
         await db.query('UPDATE pip_data SET ETAT_COM = ? WHERE id = ?', [newEtat, id]);
 
         res.json({ success: true, id: id, newStatus: newEtat });
@@ -234,5 +227,47 @@ exports.pingSingleDevice = async (req, res) => {
     } catch (error) {
         console.error("Erreur Ping Unitaire:", error);
         res.status(500).json({ success: false, message: "Erreur lors du ping" });
+    }
+};
+
+// --- 6. EXPORT CSV (Téléchargement + Écrasement local) ---
+exports.exportPipData = async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT * FROM pip_data');
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: "Aucune donnée à exporter" });
+        }
+
+        // Récupérer les clés en excluant 'id'
+        const headers = Object.keys(rows[0]).filter(key => key !== 'id');
+        
+        // Construction du contenu CSV (séparateur point-virgule)
+        const csvContent = [
+            headers.join(';'), // Ligne d'en-tête
+            ...rows.map(row => headers.map(fieldName => {
+                let val = row[fieldName] === null ? '' : String(row[fieldName]);
+                // Nettoyage pour éviter de casser le CSV (enlève les sauts de ligne et remplace ; par ,)
+                return val.replace(/[\n\r]+/g, ' ').replace(/;/g, ',');
+            }).join(';'))
+        ].join('\n');
+
+        // 1. ÉCRASEMENT DU FICHIER SUR LE DISQUE (Grâce au volume Docker)
+        try {
+            fs.writeFileSync(CSV_PATH, csvContent);
+            console.log("Fichier pip.csv mis à jour sur le serveur.");
+        } catch (err) {
+            console.error("Erreur lors de l'écriture locale du fichier:", err);
+            // On continue quand même pour envoyer le téléchargement au client
+        }
+
+        // 2. ENVOI AU CLIENT
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename="pip.csv"');
+        res.send(csvContent);
+
+    } catch (error) {
+        console.error("Erreur export CSV:", error);
+        res.status(500).json({ message: "Erreur lors de l'export" });
     }
 };

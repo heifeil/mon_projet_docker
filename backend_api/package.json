@@ -15,16 +15,16 @@
   "dependencies": {
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
-    "csv-parser": "^3.0.0",
+    "csv-parser": "^3.2.0",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
+    "modbus-serial": "^8.0.16",
     "mysql2": "^3.15.3",
+    "node-bacnet": "latest",
     "node-cron": "^3.0.3",
     "nodemon": "^3.1.11",
     "ping": "^0.4.4",
-    "systeminformation": "^5.21.0",
-    "modbus-serial": "^8.0.16",
-    "node-bacnet": "latest"
+    "systeminformation": "^5.30.7"
   }
 }

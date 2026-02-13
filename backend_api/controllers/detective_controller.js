@@ -2,23 +2,34 @@ const db = require('../config/db');
 
 exports.getDetectiveData = async (req, res) => {
     try {
-        // 1. Récupérer les stats par utilisateur
-        // CORRECTION : On cible la table 'utilisateurs' au lieu de 'users'
-        // CORRECTION : On renomme 'date_creation' en 'created_at' via un alias pour ne pas casser le frontend
+        // --- REQUÊTE 1 : UTILISATEURS + RÔLE (Via Jointure) + COMPTEUR ---
         const [usersStats] = await db.query(`
             SELECT 
+                u.id,
                 u.username, 
                 u.email, 
-                u.date_creation as created_at,
-                (SELECT COUNT(*) FROM pip_data p WHERE p.DERNIERE_MODIF_PAR = u.username) as last_modifs_count,
-                (SELECT COUNT(*) FROM detective d WHERE d.modifie_par = u.username) as total_modifs_count
+                r.nom as role, -- ICI : On récupère le nom du rôle via la jointure
+                u.date_creation,
+                (SELECT COUNT(*) FROM pip_data p WHERE p.DERNIERE_MODIF_PAR = u.email) as modif_count
             FROM utilisateurs u
-            ORDER BY last_modifs_count DESC
+            LEFT JOIN user_roles r ON u.role_id = r.id -- LA JOINTURE CORRECTIVE
+            ORDER BY modif_count DESC
         `);
 
-        // 2. Récupérer l'historique des modifications
+        // --- REQUÊTE 2 : HISTORIQUE DES TESTS ---
         const [history] = await db.query(`
-            SELECT * FROM detective ORDER BY date_modif DESC LIMIT 100
+            SELECT 
+                id, 
+                NOM_EQUIPEMENT, 
+                IP, 
+                TEST_FONCTIONNEMENT, 
+                DERNIERE_MODIF_PAR, 
+                DERNIERE_MODIF_LE
+            FROM pip_data
+            WHERE TEST_FONCTIONNEMENT IS NOT NULL 
+              AND TEST_FONCTIONNEMENT != ''
+            ORDER BY DERNIERE_MODIF_LE DESC
+            LIMIT 100
         `);
 
         res.json({
@@ -28,6 +39,6 @@ exports.getDetectiveData = async (req, res) => {
 
     } catch (error) {
         console.error("Erreur Detective:", error);
-        res.status(500).json({ message: "Erreur serveur" });
+        res.status(500).json({ message: "Erreur lors de la récupération des données" });
     }
 };

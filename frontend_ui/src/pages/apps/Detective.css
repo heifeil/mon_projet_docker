@@ -1,101 +1,110 @@
-/* Layout Global de l'App */
+/* Layout Global */
 .detective-container {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  gap: 15px;
-  overflow: hidden; /* L'intérieur scrolle si besoin, pas le conteneur */
+    padding: 20px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    overflow: hidden; 
 }
+
+/* Header Style */
+.detective-header h2 {
+    margin: 0; 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    font-size: 1.4rem; 
+    color: white; /* MODIFICATION ICI : Blanc */
+}
+
+.detective-header p {
+    margin: 5px 0 0 38px; 
+    font-size: 0.9rem; 
+    opacity: 0.7;
+}
+
+/* Grille du Haut (Tableau Users 60% / Graph 40%) */
+.detective-top-grid {
+    display: grid;
+    grid-template-columns: 3fr 2fr; 
+    gap: 15px;
+    height: 40%; 
+    min-height: 250px;
+}
+
+/* Section du Bas (Historique) */
+.detective-bottom-section {
+    flex: 1; 
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* Carte Générique */
+.detective-card {
+    background-color: var(--header-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+    overflow: hidden;
+}
+
+.detective-card h3 {
+    margin: 0 0 10px 0; font-size: 1rem; color: var(--text-main);
+    border-bottom: 1px solid var(--border-color); padding-bottom: 8px;
+    display: flex; align-items: center; gap: 8px;
+}
+
+.full-height { height: 100%; }
+
+/* Tableaux */
+.table-wrapper-det {
+    flex: 1; overflow-y: auto;
+}
+
+.detective-table {
+    width: 100%; border-collapse: collapse; font-size: 0.85rem;
+}
+
+.detective-table th {
+    background: var(--sidebar-bg); color: white;
+    padding: 8px 10px; text-align: left; position: sticky; top: 0; z-index: 5;
+}
+
+.detective-table td {
+    padding: 8px 10px; border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+.detective-table tbody tr:hover { background-color: rgba(0,0,0,0.02); }
+
+.text-center { text-align: center; }
+.date-cell { font-family: monospace; opacity: 0.8; }
+
+/* Badges de Rôles */
+.role-badge { padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; text-transform: uppercase; font-weight: bold; }
+.role-badge.superadmin { background: #d35400; color: white; } /* Orange foncé */
+.role-badge.admin { background: #8e44ad; color: white; }      /* Violet */
+.role-badge.operator { background: #2980b9; color: white; }   /* Bleu */
+.role-badge.user { background: #95a5a6; color: white; }       /* Gris */
+
+/* Badges Statut */
+.badge-ok { color: #27ae60; background: rgba(39, 174, 96, 0.1); padding: 4px 8px; border-radius: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; }
+.badge-nok { color: #c0392b; background: rgba(192, 57, 43, 0.1); padding: 4px 8px; border-radius: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; }
+
+.user-badge { background: rgba(var(--primary-color), 0.1); color: var(--primary-color); padding: 3px 8px; border-radius: 12px; font-size: 0.8rem; }
+
+/* Graphique */
+.chart-wrapper {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+}
+.empty-chart { opacity: 0.5; font-style: italic; }
 
 .detective-loading {
-  display: flex; justify-content: center; align-items: center; height: 100%; font-size: 1.2rem; opacity: 0.7;
-}
-
-/* HEADER */
-.detective-header h2 {
-  margin: 0; display: flex; align-items: center; gap: 10px; font-size: 1.2rem; color: var(--header-text);
-}
-.detective-header p {
-  margin: 5px 0 0 34px; font-size: 0.9rem; opacity: 0.6;
-}
-
-/* GRILLE HAUTE (Tableau + Graph) */
-.detective-top-grid {
-  display: grid;
-  grid-template-columns: 3fr 2fr; /* Le tableau prend plus de place que le graphe */
-  gap: 15px;
-  height: 45%; /* Prend un peu moins de la moitié de la hauteur */
-  min-height: 250px;
-}
-
-/* SECTION BASSE (Historique) */
-.detective-bottom-section {
-  flex: 1; /* Prend tout le reste de la hauteur */
-  min-height: 0;
-  overflow: hidden;
-}
-
-/* CARTES GÉNÉRIQUES */
-.det-card {
-  background-color: var(--header-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 15px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-}
-
-.det-card h3 {
-  margin: 0 0 10px 0; font-size: 0.95rem; font-weight: 500;
-  color: var(--header-text); border-bottom: 1px solid var(--border-color);
-  padding-bottom: 8px; display: flex; align-items: center; gap: 8px;
-}
-
-/* TABLEAUX STYLISÉS */
-.table-wrapper-det {
-  flex: 1;
-  overflow-y: auto;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-}
-
-.det-table {
-  width: 100%; border-collapse: collapse; font-size: 0.85rem;
-}
-
-.det-table th {
-  background-color: var(--sidebar-bg); color: white;
-  padding: 8px 10px; text-align: left; position: sticky; top: 0; z-index: 5;
-}
-
-.det-table td {
-  padding: 6px 10px; border-bottom: 1px solid var(--border-color); color: var(--text-main);
-}
-.det-table tbody tr:nth-child(even) { background-color: rgba(255,255,255,0.02); }
-
-/* Styles spécifiques au tableau */
-.highlight-val { color: var(--primary-color); font-weight: bold; font-size: 1rem; }
-.text-center { text-align: center; }
-
-.old-val { color: #e74c3c; text-decoration: line-through; opacity: 0.7; }
-.new-val { color: #2ecc71; font-weight: bold; }
-.user-badge { background: rgba(var(--primary-color), 0.1); color: var(--primary-color); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; }
-.date-cell { opacity: 0.7; font-family: monospace; }
-
-/* GRAPHIQUE */
-.chart-wrapper {
-  flex: 1; width: 100%; min-height: 0;
-}
-.empty-chart, .empty-history {
-  display: flex; justify-content: center; align-items: center; height: 100%; opacity: 0.5; font-style: italic;
-}
-
-/* RESPONSIVE */
-@media (max-width: 1000px) {
-  .detective-container { overflow-y: auto; display: block; }
-  .detective-top-grid { display: block; height: auto; }
-  .det-card { margin-bottom: 15px; height: 300px; }
-  .detective-bottom-section { height: 400px; }
+    height: 100%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: var(--text-muted);
 }
