@@ -156,3 +156,51 @@ CREATE TABLE points_history (
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (point_id) REFERENCES monitored_points(id) ON DELETE CASCADE
 );
+
+
+
+-- =============================================
+-- Table de Test PTU (Ventilo-convecteurs)
+-- =============================================
+
+DROP TABLE IF EXISTS test_PTU;
+
+CREATE TABLE test_PTU (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nom VARCHAR(255) NOT NULL,
+    is_binary BOOLEAN DEFAULT FALSE,  -- Pour les On/Off
+    is_analog BOOLEAN DEFAULT FALSE,  -- Pour les valeurs chiffrées (0-100%, Température...)
+    is_enum BOOLEAN DEFAULT FALSE,    -- Pour les listes (ex: Vitesse 1, 2, 3)
+    is_writable BOOLEAN DEFAULT FALSE,-- Si on peut piloter ce point
+    unit VARCHAR(20) DEFAULT NULL,    -- Unité (%, °C, etc.)
+    min FLOAT DEFAULT NULL,           -- Minimum (si analogique)
+    max FLOAT DEFAULT NULL,           -- Maximum (si analogique)
+    etat VARCHAR(255) DEFAULT NULL,   -- Valeur actuelle (stockée en texte pour flexibilité)
+    comment TEXT DEFAULT NULL         -- Commentaire libre
+);
+
+-- Insertion des données initiales
+INSERT INTO test_PTU (nom, is_binary, is_analog, is_enum, is_writable, unit, min, max, etat, comment) VALUES 
+('Vitesse Soufflage', FALSE, FALSE, TRUE,  TRUE,  NULL, NULL, NULL, NULL, NULL),
+('Vanne Chaude',      FALSE, TRUE,  FALSE, TRUE,  '%',  0,    100,  NULL, NULL),
+('Vanne Froide',      FALSE, TRUE,  FALSE, TRUE,  '%',  0,    100,  NULL, NULL),
+('Température',       FALSE, TRUE,  FALSE, FALSE, '°C', NULL, NULL, NULL, NULL);
+
+
+
+CREATE INDEX idx_nom_equipement ON pip_data(NOM_EQUIPEMENT);
+-- Table pour l'historique des Auto-Contrôles (AC)
+DROP TABLE IF EXISTS history_test_PTU;
+
+DROP TABLE IF EXISTS history_test_PTU;
+
+CREATE TABLE history_test_PTU (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    equipement_id INT NOT NULL,          -- La VRAIE clé étrangère (numérique)
+    nom_equipement_snapshot VARCHAR(255),-- Juste pour l'affichage (copie du nom)
+    etat_global VARCHAR(10),
+    detail_json TEXT,
+    commentaire TEXT,
+    date_test TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (equipement_id) REFERENCES pip_data(id) ON DELETE CASCADE -- La contrainte pointe maintenant vers l'ID
+);

@@ -29,7 +29,6 @@
   width: 100%;
 }
 
-/* État Réduit (PC uniquement) */
 @media (min-width: 769px) {
   .pip-container.shrunk {
       width: 30%;
@@ -282,14 +281,193 @@
     text-overflow: ellipsis;
 }
 
-/* Masquer les barres de recherche en mode réduit */
 .pip-container.shrunk .search-box {
     display: none !important;
 }
 
-/* Réduire le padding des cellules en mode réduit */
 .pip-container.shrunk td, 
 .pip-container.shrunk th {
     padding: 6px 4px;
     font-size: 0.8rem;
+}
+
+/* =========================================
+   8. STYLES AC (Auto-Contrôle)
+   ========================================= */
+.ac-container {
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.ac-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.ac-table th {
+    background: var(--header-bg);
+    padding: 10px;
+    text-align: left;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.ac-table td {
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+.ac-table tr:last-child td { border-bottom: none; }
+
+.row-ok { background-color: rgba(46, 204, 113, 0.1); }
+.row-nok { background-color: rgba(231, 76, 60, 0.1); }
+
+.unit-badge {
+    font-size: 0.7rem;
+    background: var(--border-color);
+    padding: 2px 5px;
+    border-radius: 4px;
+    margin-left: 8px;
+    opacity: 0.7;
+}
+
+.control-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.input-ac {
+    background: var(--header-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 5px 8px;
+    border-radius: 4px;
+    width: 80px;
+    font-size: 0.9rem;
+}
+
+.btn-send {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 6px;
+    cursor: pointer;
+    display: flex; align-items: center;
+}
+.btn-send:hover { opacity: 0.9; }
+
+.btn-bool {
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-main);
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+.btn-bool:hover { background: rgba(0,0,0,0.05); }
+.btn-bool.true:active { background: #2ecc71; color: white; }
+.btn-bool.false:active { background: #e74c3c; color: white; }
+
+.result-buttons {
+    display: flex;
+    gap: 5px;
+    justify-content: flex-end;
+}
+
+.btn-result {
+    border: 1px solid var(--border-color);
+    background: transparent;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.8rem;
+    opacity: 0.6;
+}
+
+.btn-result.ok:hover, .btn-result.ok.active {
+    background-color: #2ecc71;
+    color: white;
+    border-color: #2ecc71;
+    opacity: 1;
+}
+
+.btn-result.nok:hover, .btn-result.nok.active {
+    background-color: #e74c3c;
+    color: white;
+    border-color: #e74c3c;
+    opacity: 1;
+}
+
+.ac-footer {
+    padding: 15px;
+    background: var(--header-bg);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ac-footer textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-color);
+    color: var(--text-main);
+    resize: vertical;
+}
+
+.btn-save-ac {
+    align-self: flex-end;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+}
+.btn-save-ac:hover { opacity: 0.9; }
+.btn-save-ac:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* --- Styles pour les valeurs en lecture seule --- */
+.value-display-readonly {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 5px 10px;
+    width: 100px;
+    height: 30px;
+    box-sizing: border-box;
+    cursor: default;
+    user-select: none;
+}
+
+[data-theme='Sombre'] .value-display-readonly {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.value-placeholder {
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+    color: var(--primary-color);
+    font-size: 0.9rem;
+}
+
+.unit-label {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-left: 5px;
 }
