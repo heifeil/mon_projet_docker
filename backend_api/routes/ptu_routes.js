@@ -11,4 +11,7 @@ router.post('/write', ptuController.writePoint);
 // POST /api/ptu/history
 router.post('/history', ptuController.saveHistory);
 
+// La route pour chercher l'historique par équipement
+router.get('/history/:equipement_id', ptuController.getHistoryByEquipment);
+
 module.exports = router;

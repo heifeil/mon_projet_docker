@@ -204,3 +204,15 @@ CREATE TABLE history_test_PTU (
     date_test TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (equipement_id) REFERENCES pip_data(id) ON DELETE CASCADE -- La contrainte pointe maintenant vers l'ID
 );
+
+DROP TABLE IF EXISTS pilotage_modbus;
+
+CREATE TABLE pilotage_modbus (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    equipement_id INT NOT NULL,
+    nom VARCHAR(100) NOT NULL,
+    type_donnee VARCHAR(50) NOT NULL,
+    registre INT NOT NULL,
+    mode VARCHAR(20) DEFAULT 'lecture',
+    FOREIGN KEY (equipement_id) REFERENCES pip_data(id) ON DELETE CASCADE
+);

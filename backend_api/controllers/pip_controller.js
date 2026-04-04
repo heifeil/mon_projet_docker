@@ -34,6 +34,9 @@ exports.importCsvData = async (req, res) => {
             if (headers.length === 0) return res && res.status(400).json({ message: "CSV vide" });
 
             try {
+                // MODIFICATION ICI : On désactive les clés étrangères pour pouvoir DROP la table
+                await db.query('SET FOREIGN_KEY_CHECKS = 0');
+
                 await db.query('DROP TABLE IF EXISTS pip_data');
 
                 const columnsSql = headers.map(h => {
@@ -52,10 +55,15 @@ exports.importCsvData = async (req, res) => {
                     await db.query(`INSERT INTO pip_data (${cleanHeaders}) VALUES (${placeholders})`, values);
                 }
 
+                // MODIFICATION ICI : On réactive les clés étrangères
+                await db.query('SET FOREIGN_KEY_CHECKS = 1');
+
                 console.log("Import CSV terminé avec succès.");
                 if (res) res.json({ message: "Données importées et table recréée" });
 
             } catch (error) {
+                // SÉCURITÉ : On réactive les clés étrangères même si ça plante
+                await db.query('SET FOREIGN_KEY_CHECKS = 1');
                 console.error("Erreur import CSV:", error);
                 if (res) res.status(500).json({ message: "Erreur lors de l'import" });
             }

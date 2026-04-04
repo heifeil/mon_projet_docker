@@ -1,11 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, Upload, Search, Activity, Settings, CheckSquare, Square, Zap, Loader, Download } from 'lucide-react';
-import { useAuth } from '../context/AuthContext'; 
-import './PIP.css';
+import { RefreshCw, Upload, Search, Activity, Settings, CheckSquare, Square, Zap, Loader, X, Download } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext'; // Ajustez le chemin selon votre arborescence
 
-const PIP = () => {
+// --- CORRECTION DES CHEMINS ICI (../ au lieu de ./) ---
+import '../PIP.css'; 
+
+// Import des composants protocoles
+import BacnetIndex from '../protocoles/bacnet/bacnet_index'; 
+import ModbusIndex from '../protocoles/modbus/modbus_index'; 
+
+const Autocontroles = () => {
   const { user } = useAuth();
   
+  // --- ÉTATS ---
   const [availableColumns, setAvailableColumns] = useState([]);
   const [data, setData] = useState([]);
   const [filters, setFilters] = useState({});
@@ -14,7 +21,19 @@ const PIP = () => {
   const [pingingIds, setPingingIds] = useState([]); 
   const [showColMenu, setShowColMenu] = useState(false);
   const [visibleCols, setVisibleCols] = useState([]);
+  const [selectedEquipment, setSelectedEquipment] = useState(null);
 
+  // --- SÉCURITÉ : RESTRICTION D'ACCÈS ---
+  // Si l'utilisateur a le role_id 1 (Lecteur) ou 2 (Lecteur Avancé), on bloque.
+  if (user && (user.role_id === 1 || user.role_id === 2)) {
+      return (
+          <div className="empty-state" style={{ color: 'red', marginTop: '50px' }}>
+              Vous n'avez pas les droits nécessaires pour accéder à l'application Autocontrôles.
+          </div>
+      );
+  }
+
+  // CONSTANTES
   const MANDATORY_COLUMN = 'ETAT_COM';
   const FORBIDDEN_COLS = ['id', 'TEST_FONCTIONNEMENT', 'DERNIERE_MODIF_LE', 'DERNIERE_MODIF_PAR'];
   const DEFAULT_TARGETS = ["NIVEAU", "COMPARTEMENT", "LOT", "NOM_EQUIPEMENT", "LOCALISATION", "PROTOCOLE", "IP", "MAC"]; 
@@ -37,40 +56,10 @@ const PIP = () => {
         else setVisibleCols(allCols.filter(c => !FORBIDDEN_COLS.includes(c)));
       }
     } catch (err) { 
-        console.error("Erreur chargement PIP", err); 
+        console.error("Erreur chargement", err); 
     } finally { 
         setLoading(false); 
     }
-  };
-
-  const handleImport = async () => {
-    if(!window.confirm("⚠️ ATTENTION : Cela va ÉCRASER toute la base de données actuelle avec le fichier CSV du serveur.\n\nContinuer ?")) return;
-    try {
-      const res = await fetch('http://localhost:5000/api/pip/import', { method: 'POST' });
-      if(res.ok) {
-          alert("Import réussi !");
-          fetchData(true); 
-      } else { alert("Erreur lors de l'import serveur."); }
-    } catch (err) { alert("Erreur réseau import"); }
-  };
-
-  const handleExport = async () => {
-    if(!window.confirm("Télécharger le fichier .csv et mettre à jour le fichier source sur le serveur ?")) return;
-    try {
-        const response = await fetch('http://localhost:5000/api/pip/export', { method: 'GET' });
-        if (response.ok) {
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = "pip.csv";
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            window.URL.revokeObjectURL(url);
-            alert("✅ Export réussi ! Fichier téléchargé.");
-        } else { alert("❌ Erreur serveur lors de l'export."); }
-    } catch (error) { alert("Erreur de connexion."); }
   };
 
   const handleForcePing = async () => {
@@ -80,7 +69,6 @@ const PIP = () => {
       setTimeout(async () => {
          await fetchData(false);
          setIsScanning(false);
-         alert("Scan lancé en arrière-plan.");
       }, 1000);
     } catch (err) { setIsScanning(false); }
   };
@@ -109,6 +97,18 @@ const PIP = () => {
     else setVisibleCols([...visibleCols, col]);
   };
 
+  // CLIC SUR LA LIGNE POUR OUVRIR LE PANNEAU
+  const handleRowClick = (row) => {
+      const protocole = row.PROTOCOLE ? row.PROTOCOLE.toUpperCase() : '';
+      if (protocole.includes('BACNET')) {
+          setSelectedEquipment({ ...row, panel_type: 'BACNET' });
+      } else if (protocole.includes('MODBUS')) {
+          setSelectedEquipment({ ...row, panel_type: 'MODBUS' });
+      }
+  };
+
+  const handleClosePanel = () => setSelectedEquipment(null);
+
   useEffect(() => {
     fetchData(true);
     const interval = setInterval(() => fetchData(false), 60000);
@@ -119,9 +119,14 @@ const PIP = () => {
     setFilters(prev => ({ ...prev, [colName]: value.toLowerCase() }));
   };
 
-  let finalDisplayColumns = [...visibleCols];
-  if (!finalDisplayColumns.includes(MANDATORY_COLUMN) && availableColumns.includes(MANDATORY_COLUMN)) {
-    finalDisplayColumns.push(MANDATORY_COLUMN);
+  let finalDisplayColumns = [];
+  if (selectedEquipment) {
+      finalDisplayColumns = ['NOM_EQUIPEMENT', 'PROTOCOLE', 'IP', 'ETAT_COM'];
+  } else {
+      finalDisplayColumns = [...visibleCols];
+      if (!finalDisplayColumns.includes(MANDATORY_COLUMN) && availableColumns.includes(MANDATORY_COLUMN)) {
+        finalDisplayColumns.push(MANDATORY_COLUMN);
+      }
   }
 
   const filteredData = data.filter(row => {
@@ -141,53 +146,41 @@ const PIP = () => {
     return value;
   };
 
-  const canExtract = user && (Boolean(user.can_extract) === true || user.role === 'Admin' || user.role === 'Super Admin' || Boolean(user.is_admin) === true);
-  const isAdmin = user && (user.role === 'Admin' || user.role === 'Super Admin' || Boolean(user.is_admin) === true);
-
   return (
     <div className="pip-wrapper-flex">
-      <div className="pip-container full-width">
+      
+      {/* TABLEAU GAUCHE */}
+      <div className={`pip-container ${selectedEquipment ? 'shrunk' : 'full-width'}`}>
+        
         <div className="toolbar">
           <div className="toolbar-group">
-            <button onClick={() => fetchData(false)} className="btn-tool" title="Rafraîchir les données">
-                <RefreshCw size={18} />
-            </button>
+            <button onClick={() => fetchData(false)} className="btn-tool" title="Rafraîchir les données"><RefreshCw size={18} /></button>
             <button onClick={handleForcePing} className="btn-tool primary-tool" disabled={isScanning}>
-              {isScanning ? <><Loader size={18} className="spin" /> Scan...</> : <><Activity size={18} /> Scanner</>}
+              {isScanning ? <Loader size={18} className="spin" /> : <Activity size={18} />} Scanner
             </button>
-            {canExtract && (
-                <button onClick={handleExport} className="btn-tool" title="Télécharger le tableau en CSV">
-                    <Download size={18} /> Extraire (.csv)
-                </button>
-            )}
           </div>
 
           <div className="toolbar-group">
-            <div className="col-selector-wrapper">
-              <button className={`btn-tool ${showColMenu ? 'active' : ''}`} onClick={() => setShowColMenu(!showColMenu)}>
-                <Settings size={18} /> Colonnes
-              </button>
-              {showColMenu && (
-                <div className="col-dropdown">
-                  <h4>Colonnes visibles</h4>
-                  {availableColumns.map(col => {
-                    if (col === MANDATORY_COLUMN || FORBIDDEN_COLS.includes(col)) return null; 
-                    const isChecked = visibleCols.includes(col);
-                    return (
-                        <div key={col} className="col-option" onClick={() => toggleColumn(col)}>
-                            {isChecked ? <CheckSquare size={16} color="var(--primary-color)"/> : <Square size={16}/>}
-                            <span>{col.replace(/_/g, ' ')}</span>
-                        </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-            
-            {isAdmin && (
-              <button onClick={handleImport} className="btn-tool danger-tool" title="Importer un fichier CSV (Écrase la base)">
-                  <Upload size={18} /> Importer
-              </button>
+            {!selectedEquipment && (
+              <div className="col-selector-wrapper">
+                <button className={`btn-tool ${showColMenu ? 'active' : ''}`} onClick={() => setShowColMenu(!showColMenu)}>
+                  <Settings size={18} /> Colonnes
+                </button>
+                {showColMenu && (
+                  <div className="col-dropdown">
+                    {availableColumns.map(col => {
+                      if (col === MANDATORY_COLUMN || FORBIDDEN_COLS.includes(col)) return null; 
+                      const isChecked = visibleCols.includes(col);
+                      return (
+                          <div key={col} className="col-option" onClick={() => toggleColumn(col)}>
+                              {isChecked ? <CheckSquare size={16} color="var(--primary-color)"/> : <Square size={16}/>}
+                              <span>{col.replace(/_/g, ' ')}</span>
+                          </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -195,8 +188,6 @@ const PIP = () => {
         <div className="table-full-wrapper">
           {loading ? (
             <div className="loading-state"><Loader size={40} className="spin" /></div>
-          ) : data.length === 0 ? (
-            <div className="empty-state">Aucune donnée trouvée.</div>
           ) : (
             <table className="full-width-table">
               <thead>
@@ -216,16 +207,21 @@ const PIP = () => {
               <tbody>
                 {filteredData.map((row, index) => {
                   const isPinging = pingingIds.includes(row.id);
+                  const protocole = row.PROTOCOLE ? row.PROTOCOLE.toUpperCase() : '';
+                  const isClickable = protocole.includes('BACNET') || protocole.includes('MODBUS');
+                  const isSelected = selectedEquipment && selectedEquipment.id === row.id;
 
-                  // Le return ici renvoie directement le bloc de ligne <tr>
                   return (
-                    <tr key={index}>
+                    <tr 
+                        key={index} 
+                        onClick={() => handleRowClick(row)}
+                        className={`${isClickable ? 'row-clickable' : ''} ${isSelected ? 'row-selected' : ''}`}
+                    >
                       <td style={{textAlign: 'center'}}>
                           <button 
                               className="btn-mini-ping" 
                               onClick={(e) => handleSinglePing(row, e)}
                               disabled={isPinging || !row.IP}
-                              title={row.IP ? `Pinger ${row.IP}` : "Pas d'IP"}
                           >
                               {isPinging ? <Loader size={14} className="spin" /> : <Zap size={14} />}
                           </button>
@@ -241,8 +237,22 @@ const PIP = () => {
           )}
         </div>
       </div>
+
+      {/* PANNEAU DROIT DYNAMIQUE */}
+      {selectedEquipment && (
+        <div className="pip-panel-right">
+            <div className="panel-header-mobile">
+                <button onClick={handleClosePanel} className="close-panel-btn"><X size={24} /></button>
+                <span>{selectedEquipment.NOM_EQUIPEMENT}</span>
+            </div>
+            
+            {selectedEquipment.panel_type === 'BACNET' && <BacnetIndex equipment={selectedEquipment} onClose={handleClosePanel} />}
+            {selectedEquipment.panel_type === 'MODBUS' && <ModbusIndex equipment={selectedEquipment} onClose={handleClosePanel} />}
+        </div>
+      )}
+
     </div>
   );
 };
 
-export default PIP;
+export default Autocontroles;

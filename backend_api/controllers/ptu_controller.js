@@ -19,19 +19,22 @@ exports.writePoint = async (req, res) => {
 
 // 3. Sauvegarder l'AC et mettre à jour l'équipement (VERSION ID)
 exports.saveHistory = async (req, res) => {
-    // On récupère l'ID, le Nom (pour snapshot), et le reste
+    // On récupère les données du frontend
     const { equipement_id, nom_equipement, etat_global, detail, comment, user_email } = req.body;
+    
+    // On stocke l'email (ou un fallback) pour mettre à jour pip_data ensuite
     const utilisateur = user_email || 'Système';
 
     try {
         // --- ÉTAPE 1 : Sauvegarde dans l'historique ---
-        // On utilise 'equipement_id' comme clé étrangère
-        // On sauvegarde 'nom_equipement' dans 'nom_equipement_snapshot' juste pour l'affichage futur
+        // Conforme à la table history_test_PTU de votre init.sql (pas de colonne user_email ici)
         await db.query(
-            'INSERT INTO history_test_PTU (equipement_id, nom_equipement_snapshot, etat_global, detail_json, commentaire) VALUES (?, ?, ?, ?, ?)',
+            `INSERT INTO history_test_PTU 
+            (equipement_id, nom_equipement_snapshot, etat_global, detail_json, commentaire) 
+            VALUES (?, ?, ?, ?, ?)`,
             [
                 equipement_id, 
-                nom_equipement, // Snapshot (texte libre)
+                nom_equipement, 
                 etat_global, 
                 JSON.stringify(detail), 
                 comment
@@ -39,7 +42,7 @@ exports.saveHistory = async (req, res) => {
         );
 
         // --- ÉTAPE 2 : Mise à jour de la table principale (pip_data) ---
-        // On utilise WHERE id = ? ce qui est infaillible
+        // On cible l'équipement via son ID pour mettre à jour son statut, la date et le traceur (utilisateur)
         await db.query(
             `UPDATE pip_data 
              SET TEST_FONCTIONNEMENT = ?, 
@@ -53,10 +56,26 @@ exports.saveHistory = async (req, res) => {
             ]
         );
 
-        res.json({ success: true, message: "AC enregistré et statut de l'équipement mis à jour avec succès" });
+        // Si tout s'est bien passé, on renvoie un succès (code 201)
+        res.status(201).json({ success: true, message: "AC enregistré et statut de l'équipement mis à jour avec succès" });
 
     } catch (error) {
         console.error("Erreur SQL lors de la sauvegarde AC:", error);
-        res.status(500).json({ message: "Erreur lors de la sauvegarde historique" });
+        res.status(500).json({ message: "Erreur lors de la sauvegarde" });
+    }
+};
+
+// Récupérer l'historique détaillé d'un équipement spécifique
+exports.getHistoryByEquipment = async (req, res) => {
+    const { equipement_id } = req.params;
+    try {
+        const [rows] = await db.query(
+            'SELECT * FROM history_test_PTU WHERE equipement_id = ? ORDER BY date_test DESC', 
+            [equipement_id]
+        );
+        res.json(rows);
+    } catch (error) {
+        console.error("Erreur récupération historique détaillé:", error);
+        res.status(500).json({ message: "Erreur serveur" });
     }
 };
