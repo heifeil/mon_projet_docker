@@ -22,6 +22,8 @@ services:
   backend_service:
     build: ./backend_api
     container_name: conteneur_backend
+    env_file:                             # <-- AJOUT ICI : Charge le fichier .env
+      - ./backend_api/.env
     ports:
       - "5000:5000"
     environment:

@@ -216,3 +216,67 @@ CREATE TABLE pilotage_modbus (
     mode VARCHAR(20) DEFAULT 'lecture',
     FOREIGN KEY (equipement_id) REFERENCES pip_data(id) ON DELETE CASCADE
 );
+
+
+-- =============================================
+-- Table Template Extensions (Distech)
+-- =============================================
+DROP TABLE IF EXISTS module_extension_template;
+
+CREATE TABLE module_extension_template (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    modelTypeHex VARCHAR(20) NOT NULL,
+    modelNumber INT NOT NULL,
+    extensionName VARCHAR(255) NOT NULL
+);
+
+INSERT INTO module_extension_template (modelTypeHex, modelNumber, extensionName) VALUES
+('20016CFFFF04010C', 0, 'EC-Smart-Vue'),
+('20014CFFFF040184', 80, 'Multi-Sensor-M'),
+('20014CFFFF040184', 112, 'Multi-Sensor-ML'),
+('20014CFFFF040184', 113, 'Multi-Sensor-MLT'),
+('20014CFFFF030186', 0, 'ECx-Light-4'),
+('20014CFFFF030186', 1, 'ECx-Light-4D'),
+('20014CFFFF030186', 2, 'ECx-Blind-4'),
+('20014CFFFF030186', 3, 'ECx-Blind-4LV'),
+('20014CFFFF030186', 4, 'ECx-Duo-2D-2'),
+('20014CFFFF030186', 5, 'ECx-Light-4DALI'),
+('20016CFFFF090121', 0, 'EC-Multi-Sensor-BLE'),
+('30016CFFFF03018E', 1, 'TU-203'),
+('30016CFFFF03018E', 2, 'PTU-107'),
+('30016CFFFF03018E', 3, 'PTU-207'),
+('30016CFFFF03018E', 4, 'PTU-208'),
+('30016CFFFF03018E', 126, 'PTU IOM Tampered');
+
+
+-- =============================================
+-- Table de Scan Subnet
+-- =============================================
+DROP TABLE IF EXISTS SCAN_SUBNET;
+
+CREATE TABLE SCAN_SUBNET (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    equipement_id INT NOT NULL, 
+    EQUIPEMENT VARCHAR(255) DEFAULT NULL,
+    Version_REST ENUM('1', '2') DEFAULT NULL,
+
+    DALI1 ENUM('Fonctionnel', 'Manque', 'En trop', 'Non attendu') DEFAULT NULL,
+    DALI2 ENUM('Fonctionnel', 'Manque', 'En trop', 'Non attendu') DEFAULT NULL,
+    DALI3 ENUM('Fonctionnel', 'Manque', 'En trop', 'Non attendu') DEFAULT NULL,
+    DALI4 ENUM('Fonctionnel', 'Manque', 'En trop', 'Non attendu') DEFAULT NULL,
+
+    BLIND1 ENUM('Fonctionnel', 'Manque', 'En trop', 'Non attendu') DEFAULT NULL,
+    BLIND2 ENUM('Fonctionnel', 'Manque', 'En trop', 'Non attendu') DEFAULT NULL,
+    BLIND3 ENUM('Fonctionnel', 'Manque', 'En trop', 'Non attendu') DEFAULT NULL,
+    BLIND4 ENUM('Fonctionnel', 'Manque', 'En trop', 'Non attendu') DEFAULT NULL,
+
+    MC1 ENUM('Fonctionnel', 'Manque', 'En trop', 'Non attendu') DEFAULT NULL,
+    MC2 ENUM('Fonctionnel', 'Manque', 'En trop', 'Non attendu') DEFAULT NULL,
+    MC3 ENUM('Fonctionnel', 'Manque', 'En trop', 'Non attendu') DEFAULT NULL,
+    MC4 ENUM('Fonctionnel', 'Manque', 'En trop', 'Non attendu') DEFAULT NULL,
+    MC5 ENUM('Fonctionnel', 'Manque', 'En trop', 'Non attendu') DEFAULT NULL,
+
+    date_scan TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (equipement_id) REFERENCES pip_data(id) ON DELETE CASCADE
+);

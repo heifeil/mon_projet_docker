@@ -14,8 +14,9 @@ const detectiveRoutes = require('./routes/detective_routes');
 const variableRoutes = require('./routes/variable_routes');
 const monitoredAlarmsRoutes = require('./routes/monitored_alarms_routes');
 const ptuRoutes = require('./routes/ptu_routes');
-// --- AJOUT ICI : Import des routes Modbus ---
 const modbusRoutes = require('./routes/modbus_routes');
+// --- AJOUT ICI : Import des routes Subnet ---
+const subnetRoutes = require('./routes/subnet_routes');
 
 // Import des contrôleurs (pour les tâches de fond)
 const pipController = require('./controllers/pip_controller');
@@ -34,8 +35,9 @@ app.use('/api/detective', detectiveRoutes);
 app.use('/api/variables', variableRoutes);
 app.use('/api/monitored-alarms', monitoredAlarmsRoutes);
 app.use('/api/ptu', ptuRoutes);
-// --- AJOUT ICI : Activation de la route Modbus ---
 app.use('/api/modbus', modbusRoutes);
+// --- AJOUT ICI : Activation de la route Subnet ---
+app.use('/api/subnet', subnetRoutes);
 
 
 // --- PLANIFICATEUR DE TÂCHES (CRON) ---

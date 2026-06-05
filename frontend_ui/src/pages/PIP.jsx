@@ -15,9 +15,20 @@ const PIP = () => {
   const [showColMenu, setShowColMenu] = useState(false);
   const [visibleCols, setVisibleCols] = useState([]);
 
+  // --- NOUVEAU : État pour gérer la notification (Toast) ---
+  const [toast, setToast] = useState({ visible: false, message: '', type: '' });
+
   const MANDATORY_COLUMN = 'ETAT_COM';
   const FORBIDDEN_COLS = ['id', 'TEST_FONCTIONNEMENT', 'DERNIERE_MODIF_LE', 'DERNIERE_MODIF_PAR'];
   const DEFAULT_TARGETS = ["NIVEAU", "COMPARTEMENT", "LOT", "NOM_EQUIPEMENT", "LOCALISATION", "PROTOCOLE", "IP", "MAC"]; 
+
+  // --- NOUVEAU : Fonction d'affichage du Toast ---
+  const showToast = (message, type = 'success') => {
+      setToast({ visible: true, message, type });
+      setTimeout(() => {
+          setToast({ visible: false, message: '', type: '' });
+      }, 3000);
+  };
 
   const fetchData = async (isFirstLoad = false) => {
     if (isFirstLoad) setLoading(true);
@@ -44,17 +55,23 @@ const PIP = () => {
   };
 
   const handleImport = async () => {
+    // On garde le confirm() car on a besoin de la réponse de l'utilisateur
     if(!window.confirm("⚠️ ATTENTION : Cela va ÉCRASER toute la base de données actuelle avec le fichier CSV du serveur.\n\nContinuer ?")) return;
     try {
       const res = await fetch('http://localhost:5000/api/pip/import', { method: 'POST' });
       if(res.ok) {
-          alert("Import réussi !");
+          showToast("Import réussi !", "success");
           fetchData(true); 
-      } else { alert("Erreur lors de l'import serveur."); }
-    } catch (err) { alert("Erreur réseau import"); }
+      } else { 
+          showToast("Erreur lors de l'import serveur.", "error"); 
+      }
+    } catch (err) { 
+        showToast("Erreur réseau lors de l'import.", "error"); 
+    }
   };
 
   const handleExport = async () => {
+    // On garde le confirm() pour validation
     if(!window.confirm("Télécharger le fichier .csv et mettre à jour le fichier source sur le serveur ?")) return;
     try {
         const response = await fetch('http://localhost:5000/api/pip/export', { method: 'GET' });
@@ -68,9 +85,13 @@ const PIP = () => {
             a.click();
             a.remove();
             window.URL.revokeObjectURL(url);
-            alert("✅ Export réussi ! Fichier téléchargé.");
-        } else { alert("❌ Erreur serveur lors de l'export."); }
-    } catch (error) { alert("Erreur de connexion."); }
+            showToast("Export réussi ! Fichier téléchargé.", "success");
+        } else { 
+            showToast("Erreur serveur lors de l'export.", "error"); 
+        }
+    } catch (error) { 
+        showToast("Erreur de connexion.", "error"); 
+    }
   };
 
   const handleForcePing = async () => {
@@ -80,14 +101,18 @@ const PIP = () => {
       setTimeout(async () => {
          await fetchData(false);
          setIsScanning(false);
-         alert("Scan lancé en arrière-plan.");
+         showToast("Scan lancé en arrière-plan.", "success");
       }, 1000);
-    } catch (err) { setIsScanning(false); }
+    } catch (err) { 
+        setIsScanning(false); 
+        showToast("Erreur lors du lancement du scan.", "error");
+    }
   };
 
   const handleSinglePing = async (row, e) => {
     e.stopPropagation(); 
-    if (!row.IP) return alert("Pas d'IP");
+    if (!row.IP) return showToast("Impossible de pinger : Pas d'IP configurée.", "error");
+    
     setPingingIds(prev => [...prev, row.id]);
 
     try {
@@ -100,8 +125,11 @@ const PIP = () => {
         if (res.success) {
             setData(prevData => prevData.map(item => item.id === row.id ? { ...item, ETAT_COM: res.newStatus } : item));
         }
-    } catch (err) { console.error(err); } 
-    finally { setPingingIds(prev => prev.filter(id => id !== row.id)); }
+    } catch (err) { 
+        console.error(err); 
+    } finally { 
+        setPingingIds(prev => prev.filter(id => id !== row.id)); 
+    }
   };
 
   const toggleColumn = (col) => {
@@ -217,7 +245,6 @@ const PIP = () => {
                 {filteredData.map((row, index) => {
                   const isPinging = pingingIds.includes(row.id);
 
-                  // Le return ici renvoie directement le bloc de ligne <tr>
                   return (
                     <tr key={index}>
                       <td style={{textAlign: 'center'}}>
@@ -241,6 +268,13 @@ const PIP = () => {
           )}
         </div>
       </div>
+
+      {/* --- AFFICHAGE DU TOAST (Pop-up en bas à droite) --- */}
+      {toast.visible && (
+          <div className={`toast-notification ${toast.type}`}>
+              {toast.message}
+          </div>
+      )}
     </div>
   );
 };

@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { RefreshCw, Upload, Search, Activity, Settings, CheckSquare, Square, Zap, Loader, X, Download } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext'; // Ajustez le chemin selon votre arborescence
+import { useAuth } from '../../context/AuthContext'; 
 
-// --- CORRECTION DES CHEMINS ICI (../ au lieu de ./) ---
 import '../PIP.css'; 
 
-// Import des composants protocoles
 import BacnetIndex from '../protocoles/bacnet/bacnet_index'; 
 import ModbusIndex from '../protocoles/modbus/modbus_index'; 
 
@@ -23,8 +21,7 @@ const Autocontroles = () => {
   const [visibleCols, setVisibleCols] = useState([]);
   const [selectedEquipment, setSelectedEquipment] = useState(null);
 
-  // --- SÉCURITÉ : RESTRICTION D'ACCÈS ---
-  // Si l'utilisateur a le role_id 1 (Lecteur) ou 2 (Lecteur Avancé), on bloque.
+  // --- SÉCURITÉ ---
   if (user && (user.role_id === 1 || user.role_id === 2)) {
       return (
           <div className="empty-state" style={{ color: 'red', marginTop: '50px' }}>

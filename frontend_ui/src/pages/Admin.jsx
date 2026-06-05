@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ArrowLeft, Search, LayoutDashboard, Activity, AlertTriangle, CheckSquare } from 'lucide-react'; // <-- AJOUT de CheckSquare
+import { ArrowLeft, Search, LayoutDashboard, Activity, AlertTriangle, CheckSquare, Network } from 'lucide-react'; // <-- AJOUT de Network
 import Detective from './apps/Detective'; 
 import VariableMonitor from './apps/VariableMonitor'; 
 import MonitoredAlarms from './apps/MonitoredAlarms'; 
-import Autocontroles from './apps/Autocontroles'; // <-- AJOUT de l'import Autocontroles
+import Autocontroles from './apps/Autocontroles'; 
+import Subnet from './apps/Subnet'; // <-- AJOUT de l'import Subnet
 import './Admin.css';
 
 const Admin = () => {
@@ -35,13 +36,20 @@ const Admin = () => {
       minRoleId: 1, // Requis : Tout le monde
       description: "Historique des seuils (Min/Max)"
     },
-    // --- NOUVELLE APPLICATION AJOUTÉE ICI ---
     {
       id: 'autocontroles',
       name: 'Autocontrôles',
       icon: <CheckSquare size={32} />,
       minRoleId: 3, // Requis : Opérateur (3) minimum (Exclut Lecteur 1 et 2)
       description: "Pilotage et Auto-Contrôles (Modbus/BACnet)"
+    },
+    // --- NOUVELLE APPLICATION SUBNET ---
+    {
+      id: 'subnet',
+      name: 'Subnet',
+      icon: <Network size={32} />,
+      minRoleId: 1, // Requis : Tout le monde
+      description: "Scan et amorce des équipements Subnet"
     }
   ];
 
@@ -50,7 +58,8 @@ const Admin = () => {
       case 'detective': return <Detective />;
       case 'variables': return <VariableMonitor />;
       case 'monitored-alarms': return <MonitoredAlarms />;
-      case 'autocontroles': return <Autocontroles />; // <-- AJOUT du cas Autocontroles
+      case 'autocontroles': return <Autocontroles />; 
+      case 'subnet': return <Subnet />; // <-- AJOUT du cas Subnet
       default: return <div>Application introuvable</div>;
     }
   };
