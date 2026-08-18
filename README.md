@@ -187,4 +187,4 @@ L'application gère des permissions granulaires basées sur `role_id`, bloquant 
 | **Super Admin** | 5 | Droits absolus | Accès Total (Gestion Utilisateurs à venir) |
 
 ---
-Clément LAGARDE & Enzo RIQUART - UniLaSalle Amiens
+Clément LAGARDE
